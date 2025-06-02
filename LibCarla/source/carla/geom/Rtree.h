@@ -8,6 +8,7 @@
 
 #include <vector>
 
+#include <boost/core/no_exceptions_support.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/index/rtree.hpp>
