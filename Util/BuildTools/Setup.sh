@@ -37,14 +37,14 @@ done
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-command -v /usr/bin/clang++-8 >/dev/null 2>&1 || {
-  echo >&2 "clang 8 is required, but it's not installed.";
+command -v /usr/bin/clang++-19 >/dev/null 2>&1 || {
+  echo >&2 "clang 19 is required, but it's not installed.";
   exit 1;
 }
 
 CXX_TAG=c8
-export CC=/usr/bin/clang-8
-export CXX=/usr/bin/clang++-8
+export CC=/usr/bin/clang-19
+export CXX=/usr/bin/clang++-19
 
 source $(dirname "$0")/Environment.sh
 
@@ -130,7 +130,7 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     BOOST_PACKAGE_BASENAME=boost_${BOOST_VERSION//./_}
 
     log "Retrieving boost."
-    wget "https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
+    wget "https://archives.boost.io/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
     # try to use the backup boost we have in Jenkins
     if [[ ! -f "${BOOST_PACKAGE_BASENAME}.tar.gz" ]] ; then
       log "Using boost backup"
@@ -141,14 +141,15 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
     mkdir -p ${BOOST_BASENAME}-install/include
     mv ${BOOST_PACKAGE_BASENAME} ${BOOST_BASENAME}-source
-    # Boost patch for exception handling
+    # Boost patch for exception handling and other problems
     cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/rational.hpp" "${BOOST_BASENAME}-source/boost/rational.hpp"
     cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/read.hpp" "${BOOST_BASENAME}-source/boost/geometry/io/wkt/read.hpp"
+    cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/integral_wrapper.hpp" "${BOOST_BASENAME}-source/boost/mpl/aux_/integral_wrapper.hpp"
     # ---
 
     pushd ${BOOST_BASENAME}-source >/dev/null
 
-    BOOST_TOOLSET="clang-8.0"
+    BOOST_TOOLSET="clang-19"
     BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
 
     py3="/usr/bin/env python${PY_VERSION}"
@@ -174,9 +175,10 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     rm -Rf ${BOOST_BASENAME}-source
     rm ${BOOST_PACKAGE_BASENAME}.tar.gz
 
-    # Boost patch for exception handling
+    # Boost patch for exception handling and other problems
     cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/rational.hpp" "${BOOST_BASENAME}-install/include/boost/rational.hpp"
     cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/read.hpp" "${BOOST_BASENAME}-install/include/boost/geometry/io/wkt/read.hpp"
+    cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/integral_wrapper.hpp" "${BOOST_BASENAME}-install/include/boost/mpl/aux_/integral_wrapper.hpp"
     # ---
 
     # Install boost dependencies
@@ -429,7 +431,7 @@ XERCESC_VERSION=3.2.3
 XERCESC_BASENAME=xerces-c-${XERCESC_VERSION}
 
 XERCESC_TEMP_FOLDER=${XERCESC_BASENAME}
-XERCESC_REPO=https://ftp.cixug.es/apache//xerces/c/3/sources/xerces-c-${XERCESC_VERSION}.tar.gz
+XERCESC_REPO=https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-${XERCESC_VERSION}.tar.gz
 
 XERCESC_SRC_DIR=${XERCESC_BASENAME}-source
 XERCESC_INSTALL_DIR=${XERCESC_BASENAME}-install
@@ -615,6 +617,9 @@ else
 
   mkdir ${PROJ_SRC_DIR}/build
   mkdir ${PROJ_INSTALL_DIR}
+  sed -i 's;#include <string>;#include <string>\n#include <stdint.h>\n#include <cstdint>;g' ${PROJ_SRC_DIR}/src/proj_json_streaming_writer.hpp
+  sed -i 's;#include <string>;#include <string>\n#include <stdint.h>\n#include <cstdint>;;g' ${PROJ_SRC_DIR}/src/proj_json_streaming_writer.cpp
+
 
   pushd ${PROJ_SRC_DIR}/build >/dev/null
 
