@@ -26,7 +26,7 @@
 #include "Helpers.hpp"
 
 UCustomTerrain::UCustomTerrain() {
-  MapName = FString("                                                                                                    ");
+  MapName = FString("");
   DefaultMaterial = NULL;
   Origin = FVector(0.0, 0.0, 0.0);
   TileHeight = 60960.0;
@@ -45,12 +45,7 @@ UCustomTerrain::~UCustomTerrain()
 }
 
 void UCustomTerrain::Init(FString MapNamePassed, UMaterialInstance* DefaultLandscapeMaterial, FVector const& origin, FString json_path) {
-  UE_LOG(LogCustomMapGenerator, Display, TEXT("UCustomTerrain::Init MapName %s"), *MapNamePassed);
-  UE_LOG(LogCustomMapGenerator, Display, TEXT("UCustomTerrain::Init json_path %s"), *json_path);
-  FString newMapName = FString(MapNamePassed);
-  UE_LOG(LogCustomMapGenerator, Display, TEXT("UCustomTerrain::Init newMapName %s"), *newMapName);
-  UE_LOG(LogCustomMapGenerator, Display, TEXT("UCustomTerrain::Init Current MapName %s"), *MapName);
-  MapName = newMapName;
+  MapName = MapNamePassed;
   DefaultMaterial = DefaultLandscapeMaterial;
   Origin = FVector(origin.X, origin.Y, origin.Z);
   TerrainMetadata = UCustomMapGeneratorHelpers::LoadJSONMetadata(json_path);
