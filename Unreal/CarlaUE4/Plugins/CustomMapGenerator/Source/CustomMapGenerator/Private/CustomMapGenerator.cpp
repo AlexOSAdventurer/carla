@@ -1,8 +1,8 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright (c) 2025 Alex Richardson, Jonathan Sprinkle and Vanderbilt University
 
 #include "CustomMapGenerator.h"
 
-#define LOCTEXT_NAMESPACE "FCustomMapGeneratorModule"
+DEFINE_LOG_CATEGORY(LogCustomMapGenerator);
 
 void FCustomMapGeneratorModule::StartupModule()
 {

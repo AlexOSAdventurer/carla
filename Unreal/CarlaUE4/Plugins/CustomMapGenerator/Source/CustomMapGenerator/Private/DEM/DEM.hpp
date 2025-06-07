@@ -181,6 +181,7 @@ private:
             dem_y_index = std::floor((y - this->bounds.SW.y) / this->type.cellsize);
             dem_x_index = std::floor((x - this->bounds.SW.x) / this->type.cellsize);
         } else {
+            /*
             std::cout << "Was given a bad index!" << std::endl;
             std::cout << std::setprecision(15) << y << std::endl;
             std::cout << std::setprecision(15) << x << std::endl;
@@ -188,6 +189,7 @@ private:
             std::cout << std::setprecision(15) << this->bounds.SW.x << std::endl;
             std::cout << std::setprecision(15) << this->bounds.NE.y << std::endl;
             std::cout << std::setprecision(15) << this->bounds.NE.x << std::endl;
+            */
             return {
                 static_cast<int32_t>(this->type.nodata),
                 static_cast<int32_t>(this->type.nodata)
@@ -340,6 +342,7 @@ public:
                             del_y * del_x * this->data[next_r][next_c];
 
         if (print) {
+            /*
             std::cout << r << std::endl;
             std::cout << c << std::endl;
             std::cout << next_r << std::endl;
@@ -350,6 +353,7 @@ public:
             std::cout << this->data[next_r][next_c] << std::endl;
             std::cout << del_y << std::endl;
             std::cout << del_x << std::endl;
+            */
         }
 
         return altitude;

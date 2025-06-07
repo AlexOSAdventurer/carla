@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB). This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
+// Copyright (c) 2025 Alex Richardson, Jonathan Sprinkle and Vanderbilt University
 
 #pragma once
 
@@ -9,7 +9,7 @@
 #include "EditorUtilityWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "EditorLevelLibrary.h"
-#include "Carla/MapGen/LargeMapManager.h"
+#include "Engine/Classes/Materials/MaterialInterface.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <boost/optional.hpp>
@@ -19,9 +19,8 @@
 #include <string>
 #include "DEM/DEM.hpp"
 #include "json/json.hpp"
+#include "CustomTerrain.h"
 #include "GenerateBlankTile.generated.h"
-
-DECLARE_LOG_CATEGORY_EXTERN(LogCustomMapGenerator, Log, All);
 
 /**
  *
@@ -41,13 +40,6 @@ public:
   UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
   void LoadJSONMetadata();
 
-  UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
-  void CreateTile(const FString TileIndex, const FVector Offset);
-
-  void CreateTerrainMeshForTile(const FString TileIndex, DEM<double> dem, USceneComponent* root_scene, const nlohmann::json & metadata);
-
-  void CreateTerrainMesh(DEM<double>& dem, USceneComponent* root_terrain, const FString TileIndex, const int MeshIndex, const FVector2D tile_position_cm, const FVector2D tile_start, const FVector2D tile_end);
-  
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="File")
   FString JsonPath;
 
@@ -63,40 +55,13 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Defaults")
   UMaterialInstance* DefaultLandscapeMaterial;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Defaults")
-  float TileHeight;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Defaults")
-  float TileWidth;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Defaults")
-  int SubTilesInHeight;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Defaults")
-  int SubTilesInWidth;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Defaults")
-  float GridSectionSize;
+  UPROPERTY()
+  FVector OriginSurveyFeet;
 
   UPROPERTY()
-  float OriginX;
+  UCustomTerrain* TerrainFactory;
 
-  UPROPERTY()
-  float OriginY;
-
-  UPROPERTY()
-  float OriginZ;
-
-  UPROPERTY()
-  float DEMCellSize;
-
-  UPROPERTY()
-  float DEMConversionFactorToUnreal;
-
-  UPROPERTY()
-  TArray<USceneComponent*> Tiles;
-
-  nlohmann::json json_data;
+  nlohmann::json JsonData;
 
 #endif
 };
