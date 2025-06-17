@@ -18,3 +18,13 @@ void FCustomMapGeneratorModule::ShutdownModule()
 #undef LOCTEXT_NAMESPACE
 	
 IMPLEMENT_MODULE(FCustomMapGeneratorModule, CustomMapGenerator)
+
+namespace carla {
+
+  [[ noreturn ]] void throw_exception(const std::exception &e) {
+    UE_LOG(LogCustomMapGenerator, Fatal, TEXT("Exception thrown: %s"), UTF8_TO_TCHAR(e.what()));
+    // It should never reach this part.
+    std::terminate();
+  }
+
+}

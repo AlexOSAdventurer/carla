@@ -1,6 +1,6 @@
 // Copyright (c) 2025 Alex Richardson, Jonathan Sprinkle and Vanderbilt University
-#include "CustomMapGenerator.h"
 #include "CustomTerrain.h"
+#include "CustomMapGenerator.h"
 #include "Misc/FileHelper.h"
 
 #include "ContentBrowserModule.h"
@@ -66,22 +66,10 @@ void UCustomTerrain::CreateTile(const FString TileIndex, const FVector Offset) {
   DEM<double>::Type type = DEM<double>::Type(dem_y_max - dem_y_min, dem_x_max - dem_x_min, dem_y_min, dem_x_min, 2.0, -999999);
   DEM<double> dem = DEM<double>(type, bin_file);
 
-  UWorld* World = UEditorLevelLibrary::GetEditorWorld();
-  FActorSpawnParameters SpawnParams;
-  SpawnParams.Name = FName(*TileIndex);
-  FVector location = FVector(Offset.X, Offset.Y, Offset.Z);
-  FRotator rotation = FRotator(0.0, 0.0, 0.0);
-
   CreateTerrainMeshForTile(TileIndex, dem, json_value);
 }
 
 void UCustomTerrain::CreateTerrainMeshForTile(const FString TileIndex, DEM<double> dem, const nlohmann::json & metadata) {
-  UWorld* World = UEditorLevelLibrary::GetEditorWorld();
-  FActorSpawnParameters SpawnParams;
-  SpawnParams.Name = FName(*(TileIndex + "_Terrain"));
-  FVector location = FVector(0.0, 0.0, 0.0);
-  FRotator rotation = FRotator(0.0, 0.0, 0.0);
-
   float x_start = (static_cast<float>(metadata["DEM"]["y"]["min"]) - (DEMCellSize / 2.0));
   float y_start = (static_cast<float>(metadata["DEM"]["x"]["min"]) - (DEMCellSize / 2.0));
   float x_height = (static_cast<float>(metadata["DEM"]["y"]["max"]) - static_cast<float>(metadata["DEM"]["y"]["min"])) + DEMCellSize;
@@ -110,7 +98,6 @@ void UCustomTerrain::CreateTerrainMesh(DEM<double>& dem, const FString TileIndex
   UWorld* World = UEditorLevelLibrary::GetEditorWorld();
   // Creation of the procedural mesh
   AStaticMeshActor* MeshActor = World->SpawnActor<AStaticMeshActor>();
-  MeshActor->SetActorLocation(FVector(tile_position_cm.X, tile_position_cm.Y, 0));
   UStaticMeshComponent* Mesh = MeshActor->GetStaticMeshComponent();
 
   TArray<FVector> Vertices;
@@ -124,14 +111,17 @@ void UCustomTerrain::CreateTerrainMesh(DEM<double>& dem, const FString TileIndex
 
   int VerticesInX = (((tile_end.X - tile_start.X) * DEMConversionFactorToUnreal) / GridSectionSize) + 1.0f;
   int VerticesInY = (((tile_end.Y - tile_start.Y) * DEMConversionFactorToUnreal) / GridSectionSize) + 1.0f;
+  double dem_X_beginning = static_cast<double>(tile_start.X);
+  double dem_Y_beginning = static_cast<double>(tile_start.Y);
+  double dem_height_beginning = dem.interpolated_altitude(dem_Y_beginning, dem_X_beginning);
   UE_LOG(LogCustomMapGenerator, Warning, TEXT("Vertices Loop"));
   for (int i = 0; i < VerticesInX; i++) {
-    float X = (i * GridSectionSize);
+    float X = (i * GridSectionSize); 
     double dem_X = static_cast<double>(tile_start.X + (X / DEMConversionFactorToUnreal));
     for (int j = 0; j < VerticesInY; j++) {
       float Y = (j * GridSectionSize);
       double dem_Y = static_cast<double>(tile_start.Y + (Y / DEMConversionFactorToUnreal));
-      float HeightValue = (static_cast<float>(dem.interpolated_altitude(dem_Y, dem_X)) - this->Origin.Z) * DEMConversionFactorToUnreal;
+      float HeightValue = (static_cast<float>(dem.interpolated_altitude(dem_Y, dem_X) - dem_height_beginning)) * DEMConversionFactorToUnreal;
       Vertices.Add(FVector(X, Y, HeightValue));
       UVs.Add(FVector2D(i, j));
     }
@@ -173,5 +163,6 @@ void UCustomTerrain::CreateTerrainMesh(DEM<double>& dem, const FString TileIndex
   MeshActor->SetFolderPath(FName(*("Tile" + TileIndex + "/Terrain")));
   MeshActor->Tags.Add(FName("LandscapeToMove"));
   Mesh->CastShadow = false;
+  MeshActor->SetActorLocation(FVector(tile_position_cm.X, tile_position_cm.Y, dem_height_beginning * DEMConversionFactorToUnreal));
   UE_LOG(LogCustomMapGenerator, Warning, TEXT("Adding to Landscapes list"));
 }
