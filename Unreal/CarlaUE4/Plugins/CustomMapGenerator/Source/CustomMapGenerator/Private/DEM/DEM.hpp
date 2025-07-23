@@ -205,17 +205,17 @@ private:
     Interpolated_Index interpolated_index(double x, double y) {
         double dem_y_index = 0, dem_x_index = 0;
 
-        if (this->bounds.within(x, y)) {
+        //if (this->bounds.within(x, y)) {
             double nrows = static_cast<double>(this->type.nrows);
             double ncols = static_cast<double>(this->type.ncols);
             dem_y_index = std::max(0.0, std::min((y - this->bounds.SW.y + (this->type.cellsize / 2.0)) / this->type.cellsize, nrows-1));
             dem_x_index = std::max(0.0, std::min((x - this->bounds.SW.x + (this->type.cellsize / 2.0)) / this->type.cellsize, ncols-1));
-        } else {
+        /* } else {
             return {
                 static_cast<double>(this->type.nodata),
                 static_cast<double>(this->type.nodata)
             };
-        }
+        }*/
 
         return {
             dem_y_index,

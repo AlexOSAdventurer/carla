@@ -16,6 +16,7 @@
 #include <boost/optional.hpp>
 #include <carla/road/Map.h>
 #include <compiler/enable-ue4-macros.h>
+#include "Helpers.hpp"
 #include "CustomRoads.generated.h"
 
 UCLASS(Blueprintable)
@@ -26,10 +27,10 @@ public:
   UCustomRoads();
   ~UCustomRoads();
 
-  void Init(FString MapNamePassed, UMaterialInstance* LandscapePassed, UMaterialInstance* RoadPassed, UMaterialInstance* LaneMarksWhitePassed, UMaterialInstance* LaneMarksYellowPassed, UMaterialInstance* SidewalksPassed, FVector const& origin, FString OpenDrivePath);
+  void Init(FString MapNamePassed, UMaterialInstance* LandscapePassed, UMaterialInstance* RoadPassed, UMaterialInstance* LaneMarksWhitePassed, UMaterialInstance* LaneMarksYellowPassed, UMaterialInstance* SidewalksPassed, FVector const& origin, FString OpenDrivePath, FString json_path);
 
   UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
-  void CreateTile(const FString TileIndex, const FVector Offset);
+  void CreateTile(const FString TileIndex, const FVector Offset, float xDeltaMap, float yDeltaMap);
 
   UPROPERTY()
   UMaterialInstance* DefaultLandscapeMaterial;
@@ -47,21 +48,27 @@ public:
   UMaterialInstance* DefaultSidewalksMaterial;
 
 private:
-  void GenerateRoadMesh(const FString TileIndex, FVector MinLocation, FVector MaxLocation);
+  void GenerateRoadMesh(const FString TileIndex, FVector MinLocation, FVector MaxLocation, float xDeltaMap, float yDeltaMap);
 
-  void GenerateLaneMarks(const FString TileIndex, FVector MinLocation, FVector MaxLocation);
+  void GenerateLaneMarks(const FString TileIndex, FVector MinLocation, FVector MaxLocation, float xDeltaMap, float yDeltaMap);
 
-  void GenerateSpawnPoints(const FString TileIndex, FVector MinLocation, FVector MaxLocation);
+  void GenerateSpawnPoints(const FString TileIndex, FVector MinLocation, FVector MaxLocation, float xDeltaMap, float yDeltaMap);
 
   float DistanceToLaneBorder(FVector &location, int32_t lane_type = 2) const;
 
-  float GetHeight(float PosX, float PosY, bool bDrivingLane);
+  float GetHeight(DEM<double>& dem, FString TileIndex, float X, float Y);
 
   UPROPERTY()
   float TileHeight;
 
   UPROPERTY()
   float TileWidth;
+
+  UPROPERTY()
+  float DEMCellSize;
+
+  UPROPERTY()
+  float DEMConversionFactorToMeters;
 
   UPROPERTY()
   FVector Origin;
@@ -71,6 +78,7 @@ private:
 
   carla::rpc::OpendriveGenerationParameters opg_parameters;
   boost::optional<carla::road::Map> OpenDriveMap;
+  nlohmann::json TerrainMetadata;
 
 };
 

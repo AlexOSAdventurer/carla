@@ -50,6 +50,12 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="File")
   FString MapName;
 
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Defaults")
+  float xDeltaMap;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Defaults")
+  float yDeltaMap;
+
   UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="TileGeneration" )
   FString BaseLevelName;
 

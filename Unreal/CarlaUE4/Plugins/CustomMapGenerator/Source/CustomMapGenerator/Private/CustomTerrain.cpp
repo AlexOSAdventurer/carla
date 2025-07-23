@@ -33,8 +33,11 @@ UCustomTerrain::UCustomTerrain() {
   TileWidth = 91440.0;
   //GridSectionSize = 30.48;
   GridSectionSize = 60.96;
+  //GridSectionSize = 15.24;
   SubTilesInHeight = 20;
   SubTilesInWidth = 30;
+  SubTilesInHeight = 40;
+  SubTilesInWidth = 60;
   DEMCellSize = 2.0;
   DEMConversionFactorToUnreal = 30.48;
   TerrainMetadata = NULL;
@@ -54,26 +57,16 @@ void UCustomTerrain::Init(FString MapNamePassed, UMaterialInstance* DefaultLands
 
 void UCustomTerrain::CreateTile(const FString TileIndex, const FVector Offset) {
   UE_LOG(LogCustomMapGenerator, Display, TEXT("CreateTile TileIndex %s"), *TileIndex);
-  std::string TileIndexStr = TCHAR_TO_UTF8(*TileIndex);
-  nlohmann::json json_value = this->TerrainMetadata[TileIndexStr];
-  std::string bin_path = json_value["DEM"]["bin_path"];
-  double dem_x_min = json_value["DEM"]["x"]["min"];
-  double dem_x_max = json_value["DEM"]["x"]["max"];
-  double dem_y_min = json_value["DEM"]["y"]["min"];
-  double dem_y_max = json_value["DEM"]["y"]["max"];
-
-  std::ifstream bin_file(bin_path, std::ios::binary);
-  DEM<double>::Type type = DEM<double>::Type(dem_y_max - dem_y_min, dem_x_max - dem_x_min, dem_y_min, dem_x_min, 2.0, -999999);
-  DEM<double> dem = DEM<double>(type, bin_file);
-
-  CreateTerrainMeshForTile(TileIndex, dem, json_value);
+  DEM<double> dem = UCustomMapGeneratorHelpers::ReadDEMFromTile(this->TerrainMetadata, TileIndex);
+  const nlohmann::json& metadata = UCustomMapGeneratorHelpers::GetDEMMeta(this->TerrainMetadata, TileIndex);
+  CreateTerrainMeshForTile(TileIndex, dem, metadata);
 }
 
 void UCustomTerrain::CreateTerrainMeshForTile(const FString TileIndex, DEM<double> dem, const nlohmann::json & metadata) {
-  float x_start = (static_cast<float>(metadata["DEM"]["y"]["min"]) - (DEMCellSize / 2.0));
-  float y_start = (static_cast<float>(metadata["DEM"]["x"]["min"]) - (DEMCellSize / 2.0));
-  float x_height = (static_cast<float>(metadata["DEM"]["y"]["max"]) - static_cast<float>(metadata["DEM"]["y"]["min"])) + DEMCellSize;
-  float y_height = (static_cast<float>(metadata["DEM"]["x"]["max"]) - static_cast<float>(metadata["DEM"]["x"]["min"])) + DEMCellSize;
+  float x_start = (static_cast<float>(metadata["y"]["min"]) - (DEMCellSize / 2.0));
+  float y_start = (static_cast<float>(metadata["x"]["min"]) - (DEMCellSize / 2.0));
+  float x_height = (static_cast<float>(metadata["y"]["max"]) - static_cast<float>(metadata["y"]["min"])) + DEMCellSize;
+  float y_height = (static_cast<float>(metadata["x"]["max"]) - static_cast<float>(metadata["x"]["min"])) + DEMCellSize;
   float x_delta = (x_height / static_cast<float>(SubTilesInHeight));
   float y_delta = (y_height / static_cast<float>(SubTilesInWidth));
   for (int i = 0; i < SubTilesInHeight; i++) {

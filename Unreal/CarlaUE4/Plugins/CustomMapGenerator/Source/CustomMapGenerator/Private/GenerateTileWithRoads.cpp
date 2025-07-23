@@ -51,7 +51,7 @@ UGenerateTileWithRoads::UGenerateTileWithRoads()
 {
     OriginTile = FString("148110");
     JsonPath = "/home/richarwa/CarlaIngestion/metadata.json";
-    OpenDrivePath = "/home/richarwa/CarlaIngestion/148110_full.xodr";
+    OpenDrivePath = "/home/richarwa/CarlaIngestion/148110_full_2022_lidar.xodr";
     UE_LOG(LogCustomMapGenerator, Display, TEXT("UGenerateTileWithRoads is called - new3!!!"));
     LoadJSONMetadata();
     UE_LOG(LogCustomMapGenerator, Display, TEXT("UGenerateTileWithRoads loaded JSON metadata!"));
@@ -64,11 +64,11 @@ UGenerateTileWithRoads::~UGenerateTileWithRoads()
 
 void UGenerateTileWithRoads::CreateMap()
 {
-    UE_LOG(LogCustomMapGenerator, Display, TEXT("UGenerateTileWithRoads::CreateMap is called, map name is %s!!!"), *(MapName));
+    UE_LOG(LogCustomMapGenerator, Display, TEXT("UGenerateTileWithRoads::CreateMap is called, map name is %s, x delta is %f, y delta is %f!!!"), *(MapName), xDeltaMap, yDeltaMap);
     this->TerrainFactory = NewObject<UCustomTerrain>();
     this->TerrainFactory->Init(MapName, DefaultLandscapeMaterial, OriginSurveyFeet, JsonPath);
     this->RoadFactory = NewObject<UCustomRoads>();
-    this->RoadFactory->Init(MapName, DefaultLandscapeMaterial, DefaultRoadMaterial, DefaultLaneMarksWhiteMaterial, DefaultLaneMarksYellowMaterial, DefaultSidewalksMaterial, FVector(OriginLatLong.X, OriginLatLong.Y, 0.0), OpenDrivePath);
+    this->RoadFactory->Init(MapName, DefaultLandscapeMaterial, DefaultRoadMaterial, DefaultLaneMarksWhiteMaterial, DefaultLaneMarksYellowMaterial, DefaultSidewalksMaterial, FVector(OriginLatLong.X, OriginLatLong.Y, 0.0), OpenDrivePath, JsonPath);
     AActor* QueryActor = UGameplayStatics::GetActorOfClass(
         UEditorLevelLibrary::GetEditorWorld(),
         ALargeMapManager::StaticClass() );
@@ -88,7 +88,7 @@ void UGenerateTileWithRoads::CreateMap()
         UE_LOG(LogCustomMapGenerator, Warning, TEXT("Tile0Offset is %s"), *( Tile0Offset.ToString() ) );
         TerrainFactory->CreateTile(this->OriginTile, FVector(0.0, 0.0, 0.0));
         UE_LOG(LogCustomMapGenerator, Warning, TEXT("Mesh terrain created!"));
-        RoadFactory->CreateTile(this->OriginTile, FVector(0.0, 0.0, 0.0));
+        RoadFactory->CreateTile(this->OriginTile, FVector(0.0, 0.0, 0.0), xDeltaMap, yDeltaMap);
         UE_LOG(LogCustomMapGenerator, Warning, TEXT("Roads created!"));
     }
     else {

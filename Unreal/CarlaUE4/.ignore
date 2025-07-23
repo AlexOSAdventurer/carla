@@ -1,0 +1,17 @@
+.kdev4
+.vscode
+Content
+Intermediate
+Saved
+Plugins/Carla/CarlaDependencies
+Plugins/Carla/Content
+Plugins/Carla/Intermediate
+Plugins/CarlaExporter/Intermediate
+Plugins/CarlaTools/Content
+Plugins/CarlaTools/Intermediate
+Plugins/CustomMapGenerator/Content
+Plugins/CustomMapGenerator/Intermediate
+Plugins/Streetmap/.git
+Plugins/Streetmap/Content
+Plugins/Streetmap/Docs
+Plugins/Streetmap/Intermediate

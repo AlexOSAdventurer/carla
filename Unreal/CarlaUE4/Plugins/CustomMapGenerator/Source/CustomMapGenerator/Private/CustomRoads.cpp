@@ -10,7 +10,6 @@
 
 #include <string>
 #include <iostream>
-#include "Helpers.hpp"
 #include "Carla/BlueprintLibary/MapGenFunctionLibrary.h"
 #include "Engine/Classes/Kismet/GameplayStatics.h"
 #include "Engine/StaticMesh.h"
@@ -26,18 +25,21 @@
 #include "EditorLevelLibrary.h"
 #include "FileHelpers.h"
 
+
 UCustomRoads::UCustomRoads() {
   MapName = FString("");
   Origin = FVector(0.0, 0.0, 0.0);
   TileHeight = 60960.0;
   TileWidth = 91440.0;
+  DEMConversionFactorToMeters = 0.3048;
+  DEMCellSize = 2.0;
 }
 
 UCustomRoads::~UCustomRoads()
 {
 }
 
-void UCustomRoads::Init(FString MapNamePassed, UMaterialInstance* LandscapePassed, UMaterialInstance* RoadPassed, UMaterialInstance* LaneMarksWhitePassed, UMaterialInstance* LaneMarksYellowPassed, UMaterialInstance* SidewalksPassed, FVector const& origin, FString OpenDrivePath) {
+void UCustomRoads::Init(FString MapNamePassed, UMaterialInstance* LandscapePassed, UMaterialInstance* RoadPassed, UMaterialInstance* LaneMarksWhitePassed, UMaterialInstance* LaneMarksYellowPassed, UMaterialInstance* SidewalksPassed, FVector const& origin, FString OpenDrivePath, FString json_path) {
   MapName = MapNamePassed;
   DefaultLandscapeMaterial = LandscapePassed;
   DefaultRoadMaterial = RoadPassed;
@@ -51,13 +53,14 @@ void UCustomRoads::Init(FString MapNamePassed, UMaterialInstance* LandscapePasse
   FFileHelper::LoadFileToString(file_content, *OpenDrivePath);
   std::string opendrive_xml = carla::rpc::FromLongFString(file_content);
   OpenDriveMap = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
+  TerrainMetadata = UCustomMapGeneratorHelpers::LoadJSONMetadata(json_path);
 }
 
-void UCustomRoads::CreateTile(const FString TileIndex, const FVector Offset) {
+void UCustomRoads::CreateTile(const FString TileIndex, const FVector Offset, float xDeltaMap, float yDeltaMap) {
   if (OpenDriveMap.has_value()) {
     UE_LOG(LogCustomMapGenerator, Display, TEXT("UCustomRoads::CreateTile TileIndex %s"), *TileIndex);
-    FVector MinLocation(0.0, 0.0, 0.0);
-    FVector MaxLocation(TileWidth, -TileHeight, Offset.Z);
+    FVector MinLocation(0.0, 0.0, FLT_MIN);
+    FVector MaxLocation(TileWidth*2.0, -TileHeight*2.0, FLT_MAX);
     //MinPosition = FVector(0.0, -Tile, 0.0f);
     //  MaxPosition = FVector(TileHeight, (CurrentTilesInXY.Y + 1.0f) * -TileSize, 10000.0f);
     /*carla::road::MapData& _data = OpenDriveMap->GetMap();
@@ -88,19 +91,21 @@ void UCustomRoads::CreateTile(const FString TileIndex, const FVector Offset) {
     }
     std::cout << "Min x: " << min_x << ", Max x:" << max_x << std::endl;
     std::cout << "Min y: " << min_y << ", Max y:" << max_y << std::endl;*/
-    this->GenerateRoadMesh(TileIndex, MinLocation, MaxLocation);
-    this->GenerateLaneMarks(TileIndex, MinLocation, MaxLocation);
-    this->GenerateSpawnPoints(TileIndex, MinLocation, MaxLocation);
+    this->GenerateRoadMesh(TileIndex, MinLocation, MaxLocation, xDeltaMap, yDeltaMap);
+    this->GenerateLaneMarks(TileIndex, MinLocation, MaxLocation, xDeltaMap, yDeltaMap);
+    this->GenerateSpawnPoints(TileIndex, MinLocation, MaxLocation, xDeltaMap, yDeltaMap);
   }
   else {
     UE_LOG(LogCustomMapGenerator, Display, TEXT("UCustomRoads::CreateTile No Map!"));
   }
 }
 
-void UCustomRoads::GenerateRoadMesh(const FString TileIndex, FVector MinLocation, FVector MaxLocation)
+void UCustomRoads::GenerateRoadMesh(const FString TileIndex, FVector MinLocation, FVector MaxLocation, float xDeltaMap, float yDeltaMap)
 {
+  DEM<double> dem = UCustomMapGeneratorHelpers::ReadDEMFromTile(this->TerrainMetadata, TileIndex);
+
   opg_parameters.vertex_distance = 0.5f;
-  opg_parameters.vertex_width_resolution = 8.0f;
+  opg_parameters.vertex_width_resolution = 10.0f;
   opg_parameters.simplification_percentage = 50.0f;
   double start = FPlatformTime::Seconds();
 
@@ -129,22 +134,27 @@ void UCustomRoads::GenerateRoadMesh(const FString TileIndex, FVector MinLocation
         for( auto& Vertex : Mesh->GetVertices() )
         {
           FVector VertexFVector = Vertex.ToFVector();
-          float x = -Vertex.y;
-          float y = Vertex.x;
+          float x = -Vertex.y + xDeltaMap;
+          float y = Vertex.x + yDeltaMap;
           Vertex.x = x;
           Vertex.y = y;
-          Vertex.z += GetHeight(Vertex.x, Vertex.y, this->DistanceToLaneBorder(VertexFVector) > 65.0f );
+          Vertex.z = GetHeight(dem, TileIndex, Vertex.x, Vertex.y) + 0.005f;
+          //Vertex.z += 0.05;
+          //Vertex.z += GetHeight(Vertex.x, Vertex.y, this->DistanceToLaneBorder(VertexFVector) > 65.0f );
         }
         //carla::geom::Simplification Simplify(0.15);
         //Simplify.Simplificate(Mesh);
       }else{
         for( auto& Vertex : Mesh->GetVertices() )
         {
-          float x = -Vertex.y;
-          float y = Vertex.x;
+          float x = -Vertex.y + xDeltaMap;
+          float y = Vertex.x + yDeltaMap;
           Vertex.x = x;
           Vertex.y = y;
-          Vertex.z += GetHeight(Vertex.x, Vertex.y, false) + 0.15f;
+          Vertex.z = GetHeight(dem, TileIndex, Vertex.x, Vertex.y) + 0.005f;
+          //Vertex.z += 0.05;
+          //Vertex.z += 0.15f;
+          //Vertex.z += GetHeight(Vertex.x, Vertex.y, false) + 0.15f;
           //Vertex.x *= -1.0;
           //Vertex.z *= 0.1;
         }
@@ -156,17 +166,21 @@ void UCustomRoads::GenerateRoadMesh(const FString TileIndex, FVector MinLocation
 
       StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
+      TempActor->SetFolderPath(FName(*("Tile" + TileIndex + "/RoadMeshDefaultFolder")));
       if(DefaultRoadMaterial && PairMap.first == carla::road::Lane::LaneType::Driving)
       {
         StaticMeshComponent->SetMaterial(0, DefaultRoadMaterial);
         StaticMeshComponent->CastShadow = false;
         TempActor->SetActorLabel(FString("SM_DrivingLane_") + TileIndex + FString::FromInt(index));
+        TempActor->SetFolderPath(FName(*("Tile" + TileIndex + "/DrivingLane")));
       }
       if(DefaultSidewalksMaterial && PairMap.first == carla::road::Lane::LaneType::Sidewalk)
       {
         StaticMeshComponent->SetMaterial(0, DefaultSidewalksMaterial);
         TempActor->SetActorLabel(FString("SM_Sidewalk_") + TileIndex + FString::FromInt(index));
+        TempActor->SetFolderPath(FName(*("Tile" + TileIndex + "/Sidewalk")));
       }
+      
       FVector MeshCentroid = FVector(0,0,0);
       for( auto Vertex : Mesh->GetVertices() )
       {
@@ -196,13 +210,13 @@ void UCustomRoads::GenerateRoadMesh(const FString TileIndex, FVector MinLocation
 
       if(PairMap.first == carla::road::Lane::LaneType::Sidewalk)
       {
-        UStaticMesh* MeshToSet = UMapGenFunctionLibrary::CreateMesh(MeshData,  Tangents, DefaultSidewalksMaterial, MapName, "DrivingLane", FName(TEXT("SM_SidewalkMesh" + TileIndex + FString::FromInt(index) )));
+        UStaticMesh* MeshToSet = UMapGenFunctionLibrary::CreateMesh(MeshData,  Tangents, DefaultSidewalksMaterial, MapName, "DrivingLane"+TileIndex, FName(TEXT("SM_SidewalkMesh" + TileIndex + FString::FromInt(index) )));
         StaticMeshComponent->SetStaticMesh(MeshToSet);
       }
 
       if(PairMap.first == carla::road::Lane::LaneType::Driving)
       {
-        UStaticMesh* MeshToSet = UMapGenFunctionLibrary::CreateMesh(MeshData,  Tangents, DefaultRoadMaterial, MapName, "DrivingLane", FName(TEXT("SM_DrivingLaneMesh" + TileIndex + FString::FromInt(index))));
+        UStaticMesh* MeshToSet = UMapGenFunctionLibrary::CreateMesh(MeshData,  Tangents, DefaultRoadMaterial, MapName, "DrivingLane"+TileIndex, FName(TEXT("SM_DrivingLaneMesh" + TileIndex + FString::FromInt(index))));
         StaticMeshComponent->SetStaticMesh(MeshToSet);
       }
       TempActor->SetActorLocation(MeshCentroid * 100);
@@ -220,10 +234,11 @@ void UCustomRoads::GenerateRoadMesh(const FString TileIndex, FVector MinLocation
   UE_LOG(LogCustomMapGenerator, Log, TEXT("Mesh spawnning and translation code executed in %f seconds."), end - start);
 }
 
-void UCustomRoads::GenerateLaneMarks(const FString TileIndex, FVector MinLocation, FVector MaxLocation)
+void UCustomRoads::GenerateLaneMarks(const FString TileIndex, FVector MinLocation, FVector MaxLocation, float xDeltaMap, float yDeltaMap)
 {
+  DEM<double> dem = UCustomMapGeneratorHelpers::ReadDEMFromTile(this->TerrainMetadata, TileIndex);
   opg_parameters.vertex_distance = 0.5f;
-  opg_parameters.vertex_width_resolution = 8.0f;
+  opg_parameters.vertex_width_resolution = 10.0f;
   opg_parameters.simplification_percentage = 15.0f;
   std::vector<std::string> lanemarkinfo;
   carla::geom::Vector3D CarlaMinLocation(MinLocation.X / 100, MinLocation.Y / 100, MinLocation.Z /100);
@@ -249,11 +264,13 @@ void UCustomRoads::GenerateLaneMarks(const FString TileIndex, FVector MinLocatio
     for (auto& Vertex : Mesh->GetVertices())
     {
       FVector VertexFVector = Vertex.ToFVector();
-      Vertex.z += GetHeight(Vertex.x, Vertex.y, DistanceToLaneBorder(VertexFVector) > 65.0f ) + 0.0001f;
-      float x = -Vertex.y;
-      float y = Vertex.x;
+      //Vertex.z += GetHeight(Vertex.x, Vertex.y, DistanceToLaneBorder(VertexFVector) > 65.0f ) + 0.0001f;
+      float x = -Vertex.y + xDeltaMap;
+      float y = Vertex.x + yDeltaMap;
       Vertex.x = x;
       Vertex.y = y;
+      Vertex.z = GetHeight(dem, TileIndex, Vertex.x, Vertex.y) + 0.006f;
+
       MeshCentroid += Vertex.ToFVector();
      
     }
@@ -278,16 +295,10 @@ void UCustomRoads::GenerateLaneMarks(const FString TileIndex, FVector MinLocatio
       }
     }
 
-    if(MinDistance < 250)
-    {
-      UE_LOG(LogCustomMapGenerator, VeryVerbose, TEXT("Skkipped is %f."), MinDistance);
-      index++;
-      continue;
-    }
-
     AStaticMeshActor* TempActor = UEditorLevelLibrary::GetEditorWorld()->SpawnActor<AStaticMeshActor>();
     UStaticMeshComponent* StaticMeshComponent = TempActor->GetStaticMeshComponent();
     TempActor->SetActorLabel(FString("SM_LaneMark_") + TileIndex + FString::FromInt(meshindex));
+    TempActor->SetFolderPath(FName(*("Tile" + TileIndex + "/LaneMarks")));
     StaticMeshComponent->CastShadow = false;
     if (lanemarkinfo[index].find("yellow") != std::string::npos) {
       if(DefaultLaneMarksYellowMaterial)
@@ -309,7 +320,7 @@ void UCustomRoads::GenerateLaneMarks(const FString TileIndex, FVector MinLocatio
       Tangents
     );
 
-    UStaticMesh* MeshToSet = UMapGenFunctionLibrary::CreateMesh(MeshData,  Tangents, DefaultLandscapeMaterial, MapName, "LaneMark", FName(TEXT("SM_LaneMarkMesh" + TileIndex + FString::FromInt(meshindex) )));
+    UStaticMesh* MeshToSet = UMapGenFunctionLibrary::CreateMesh(MeshData,  Tangents, DefaultLandscapeMaterial, MapName, "LaneMark"+TileIndex, FName(TEXT("SM_LaneMarkMesh" + TileIndex + FString::FromInt(meshindex) )));
     StaticMeshComponent->SetStaticMesh(MeshToSet);
     TempActor->SetActorLocation(MeshCentroid * 100);
     TempActor->Tags.Add(*FString(lanemarkinfo[index].c_str()));
@@ -325,7 +336,7 @@ void UCustomRoads::GenerateLaneMarks(const FString TileIndex, FVector MinLocatio
   UEditorLevelLibrary::SaveCurrentLevel();
 }
 
-void UCustomRoads::GenerateSpawnPoints(const FString TileIndex, FVector MinLocation, FVector MaxLocation)
+void UCustomRoads::GenerateSpawnPoints(const FString TileIndex, FVector MinLocation, FVector MaxLocation, float xDeltaMap, float yDeltaMap)
 {
   float SpawnersHeight = 300.f;
   const auto Waypoints = OpenDriveMap->GenerateWaypointsOnRoadEntries();
@@ -360,12 +371,16 @@ float UCustomRoads::DistanceToLaneBorder(FVector &location, int32_t lane_type) c
   return 100000.0f;
 }
 
-float UCustomRoads::GetHeight(float PosX, float PosY, bool bDrivingLane) {
-  if( bDrivingLane ){
-    return carla::geom::deformation::GetZPosInDeformation(PosX, PosY) +
-      (carla::geom::deformation::GetZPosInDeformation(PosX, PosY) * -0.3f) -
-      carla::geom::deformation::GetBumpDeformation(PosX,PosY);
-  } else {
-      return carla::geom::deformation::GetZPosInDeformation(PosX, PosY) + (carla::geom::deformation::GetZPosInDeformation(PosX, PosY) * -0.3f);
-  }
+float UCustomRoads::GetHeight(DEM<double>& dem, FString TileIndex, float X, float Y) {
+  nlohmann::json dem_meta = UCustomMapGeneratorHelpers::GetDEMMeta(this->TerrainMetadata, TileIndex);
+  double dem_x_min = dem_meta["x"]["min"];
+  double dem_y_min = dem_meta["y"]["min"];
+
+  double dem_x_start = dem_x_min - (DEMCellSize / 2.0);
+  double dem_y_start = dem_y_min - (DEMCellSize / 2.0);
+
+  double dem_X = dem_x_start + (Y / DEMConversionFactorToMeters);
+  double dem_Y = dem_y_start + (X / DEMConversionFactorToMeters);
+
+  return static_cast<float>(dem.interpolated_altitude(dem_X, dem_Y)) * DEMConversionFactorToMeters;
 }
