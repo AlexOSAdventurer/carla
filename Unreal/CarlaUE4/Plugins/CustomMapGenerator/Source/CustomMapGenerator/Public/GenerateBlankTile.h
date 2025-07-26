@@ -20,19 +20,20 @@
 #include "DEM/DEM.hpp"
 #include "json/json.hpp"
 #include "CustomTerrain.h"
-#include "GenerateBlankTile.generated.h"
+#include "GenerateBlankTileNew.generated.h"
+
 
 /**
  *
  */
 UCLASS(Blueprintable, BlueprintType)
-class CUSTOMMAPGENERATOR_API UGenerateBlankTile : public UEditorUtilityWidget
+class CUSTOMMAPGENERATOR_API UGenerateBlankTileNew : public UEditorUtilityWidget
 {
 GENERATED_BODY()
 #if WITH_EDITOR
 public:
-  UGenerateBlankTile();
-  ~UGenerateBlankTile();
+  UGenerateBlankTileNew();
+  ~UGenerateBlankTileNew();
 
   UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
   void CreateMap();
@@ -46,20 +47,11 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="File")
   FString MapName;
 
-  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="TileGeneration" )
-  FString BaseLevelName;
-
-  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Defaults" )
-  FString OriginTile;
-
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Defaults")
   UMaterialInstance* DefaultLandscapeMaterial;
 
   UPROPERTY()
-  FVector OriginSurveyFeet;
-
-  UPROPERTY()
-  UCustomTerrain* TerrainFactory;
+  UCustomTerrainNew* TerrainFactory;
 
   nlohmann::json JsonData;
 
