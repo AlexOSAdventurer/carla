@@ -5,8 +5,7 @@
 #include "Math/Vector.h"
 #include "UnrealString.h"
 #include "Materials/MaterialInstanceConstant.h"
-#include "DEM/DEM.hpp"
-#include "json/json.hpp"
+#include "MapDataset.h"
 #include "CustomTerrain.generated.h"
 
 UCLASS(Blueprintable)
@@ -17,47 +16,20 @@ public:
   UCustomTerrain();
   ~UCustomTerrain();
 
-  void Init(FString MapNamePassed, UMaterialInstance* DefaultLandscapeMaterial, FVector const& origin, FString json_path);
+  void Init(FString map_name_passed, UMapDataset* map_dataset_passed);
 
   UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
-  void CreateTile(const FString TileIndex, const FVector Offset);
+  void CreateTiles();
 
-  void CreateTerrainMeshForTile(const FString TileIndex, DEM<double> dem, const nlohmann::json & metadata);
-
-  void CreateTerrainMesh(DEM<double>& dem, const FString TileIndex, const int MeshIndex, const FVector2D tile_position_cm, const FVector2D tile_start, const FVector2D tile_end);
+  UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
+  void CreateTile(const FString tile_index);
   
 private:
   UPROPERTY()
-  float TileHeight;
+  FString map_name;
 
-  UPROPERTY()
-  float TileWidth;
+  UMapDataset* map_dataset;
 
-  UPROPERTY()
-  int SubTilesInHeight;
-
-  UPROPERTY()
-  int SubTilesInWidth;
-
-  UPROPERTY()
-  float GridSectionSize;
-
-  UPROPERTY()
-  FVector Origin;
-
-  UPROPERTY()
-  float DEMCellSize;
-
-  UPROPERTY()
-  float DEMConversionFactorToUnreal;
-
-  UPROPERTY()
-  UMaterialInstance* DefaultMaterial;
-
-  UPROPERTY()
-  FString MapName;
-
-  nlohmann::json TerrainMetadata;
 };
 
 

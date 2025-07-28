@@ -17,43 +17,37 @@
 #include <compiler/enable-ue4-macros.h>
 
 #include <string>
-#include "DEM/DEM.hpp"
-#include "json/json.hpp"
 #include "CustomTerrain.h"
-#include "GenerateBlankTileNew.generated.h"
+#include "MapDataset.h"
+#include "GenerateBlankTile.generated.h"
 
 
 /**
  *
  */
 UCLASS(Blueprintable, BlueprintType)
-class CUSTOMMAPGENERATOR_API UGenerateBlankTileNew : public UEditorUtilityWidget
+class CUSTOMMAPGENERATOR_API UGenerateBlankTile : public UEditorUtilityWidget
 {
 GENERATED_BODY()
 #if WITH_EDITOR
 public:
-  UGenerateBlankTileNew();
-  ~UGenerateBlankTileNew();
+  UGenerateBlankTile();
+  ~UGenerateBlankTile();
 
   UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
   void CreateMap();
 
-  UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
-  void LoadJSONMetadata();
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="File")
+  FString dataset_path;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="File")
-  FString JsonPath;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="File")
-  FString MapName;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Defaults")
-  UMaterialInstance* DefaultLandscapeMaterial;
+  FString map_name;
 
   UPROPERTY()
-  UCustomTerrainNew* TerrainFactory;
+  UCustomTerrain* terrain_factory;
 
-  nlohmann::json JsonData;
+  UPROPERTY()
+  UMapDataset* map_dataset;
 
 #endif
 };

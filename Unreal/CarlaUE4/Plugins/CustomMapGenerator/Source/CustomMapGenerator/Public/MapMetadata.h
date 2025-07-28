@@ -51,11 +51,18 @@ public:
     ~UMapMetadata();
 
     UFUNCTION(BlueprintCallable)
-    void loadMetadata();
+    void loadMetadata(FString metadata_path_passed);
 
-    TMap<FString, FTileData> terrain_data;
+    UPROPERTY()
+    TMap<FString, FCustomMapTileData> terrain_data;
+
+    UPROPERTY()
     TArray<float> original_bounds;
+
+    UPROPERTY()
     TArray<float> carla_bounds;
+
+    UPROPERTY()
     FString metadata_path;
 
 private:

@@ -13,19 +13,19 @@ UMapMetadata::~UMapMetadata() {
 
 }
 
-void UMapMetadata::loadMetadata(FString metadata_path) {
+void UMapMetadata::loadMetadata(FString metadata_path_passed) {
     this->original_bounds.Empty();
     this->carla_bounds.Empty();
     this->terrain_data.Empty();
 
-    this->metadata_path = metadata_path;
+    this->metadata_path = metadata_path_passed;
     FString file_content;
     if (!FFileHelper::LoadFileToString(file_content, *(this->metadata_path))) {
         UE_LOG(LogCustomMapGenerator, Log, TEXT("Failed to load file: %s"), *(this->metadata_path));
         return;
     }
     TSharedPtr<FJsonObject> root_object;
-    TSharedRef<TJsonReader<>> reader = TJsonReaderFactory<>::Create(json_raw);
+    TSharedRef<TJsonReader<>> reader = TJsonReaderFactory<>::Create(file_content);
 
     if (!FJsonSerializer::Deserialize(reader, root_object) || !root_object.IsValid())
     {
@@ -34,7 +34,7 @@ void UMapMetadata::loadMetadata(FString metadata_path) {
     }
 
 
-    TArray<TSharedPtr<FJsonValue>> original_bounds_json = JsonObject->GetArrayField("original_bounds");
+    TArray<TSharedPtr<FJsonValue>> original_bounds_json = root_object->GetArrayField("original_bounds");
     for (const TSharedPtr<FJsonValue>& value : original_bounds_json)
     {
         if (value->Type == EJson::Number)
@@ -47,7 +47,7 @@ void UMapMetadata::loadMetadata(FString metadata_path) {
         }
     }
 
-    TArray<TSharedPtr<FJsonValue>> carla_bounds_json = JsonObject->GetArrayField("carla_bounds");
+    TArray<TSharedPtr<FJsonValue>> carla_bounds_json = root_object->GetArrayField("carla_bounds");
     for (const TSharedPtr<FJsonValue>& value : carla_bounds_json)
     {
         if (value->Type == EJson::Number)
@@ -70,7 +70,7 @@ void UMapMetadata::loadMetadata(FString metadata_path) {
 
         if (tile_props.IsValid())
         {
-            FTileData tile;
+            FCustomMapTileData tile;
 
             tile.min_y = tile_props->GetNumberField("min_y");
             tile.min_x = tile_props->GetNumberField("min_y");
@@ -83,7 +83,7 @@ void UMapMetadata::loadMetadata(FString metadata_path) {
             tile.fbx_path = tile_props->GetStringField("fbx_path");
             tile.material = tile_props->GetStringField("material");
 
-            this->terrain_data.Add(TileName, Tile);
+            this->terrain_data.Add(tile_name, tile);
         }
     }
 }

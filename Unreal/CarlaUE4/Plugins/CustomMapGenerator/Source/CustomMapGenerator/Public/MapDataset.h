@@ -15,7 +15,19 @@ public:
     UMapDataset();
     ~UMapDataset();
 
+    UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
+    void load();
+
+    UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
+    TArray<FString> getTerrainTileKeys();
+
+    UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
+    FCustomMapTileData getTerrainData(FString tile_key);
+
+    UPROPERTY()
     UMapMetadata* map_metadata;
+
+    UPROPERTY()
     FString dataset_path;
 
 private:
