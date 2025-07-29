@@ -16,6 +16,12 @@ public:
     ~UMapDataset();
 
     UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
+    FString getStaticTerrainPath(const FString& map_name);
+
+    UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
+    TMap<FString, FString> importTerrainMeshes(const FString& map_name);
+
+    UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
     void load();
 
     UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
@@ -23,6 +29,9 @@ public:
 
     UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
     FCustomMapTileData getTerrainData(FString tile_key);
+
+    UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
+    TArray<float> getOrigin();
 
     UPROPERTY()
     UMapMetadata* map_metadata;

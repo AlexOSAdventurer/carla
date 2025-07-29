@@ -40,6 +40,9 @@ struct FCustomMapTileData
 
     UPROPERTY(BlueprintReadOnly, EditAnywhere)
     FString material;
+
+    UPROPERTY(BlueprintReadOnly, EditAnywhere)
+    FString name;
 };
 
 UCLASS(Blueprintable)

@@ -4,6 +4,7 @@
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
+#include "Misc/Paths.h"
 
 UMapMetadata::UMapMetadata() {
     this->metadata_path = "";
@@ -39,7 +40,7 @@ void UMapMetadata::loadMetadata(FString metadata_path_passed) {
     {
         if (value->Type == EJson::Number)
         {
-            this->original_bounds.Add(value->AsNumber());
+            this->original_bounds.Add(value->AsNumber() * 100.0);
         }
         else
         {
@@ -52,7 +53,7 @@ void UMapMetadata::loadMetadata(FString metadata_path_passed) {
     {
         if (value->Type == EJson::Number)
         {
-            this->carla_bounds.Add(value->AsNumber());
+            this->carla_bounds.Add(value->AsNumber() * 100.0);
         }
         else
         {
@@ -72,16 +73,17 @@ void UMapMetadata::loadMetadata(FString metadata_path_passed) {
         {
             FCustomMapTileData tile;
 
-            tile.min_y = tile_props->GetNumberField("min_y");
-            tile.min_x = tile_props->GetNumberField("min_y");
-            tile.max_y = tile_props->GetNumberField("max_y");
-            tile.max_x = tile_props->GetNumberField("max_y");
-            tile.min_z = tile_props->GetNumberField("min_z");
-            tile.max_z = tile_props->GetNumberField("max_z");
-            tile.tile_point_interval = tile_props->GetNumberField("tile_point_interval");
+            tile.min_y = tile_props->GetNumberField("min_y") * 100.0;
+            tile.min_x = tile_props->GetNumberField("min_x") * 100.0;
+            tile.max_y = tile_props->GetNumberField("max_y") * 100.0;
+            tile.max_x = tile_props->GetNumberField("max_x") * 100.0;
+            tile.min_z = tile_props->GetNumberField("min_z") * 100.0;
+            tile.max_z = tile_props->GetNumberField("max_z") * 100.0;
+            tile.tile_point_interval = tile_props->GetNumberField("tile_point_interval") * 100.0;
             tile.obj_path = tile_props->GetStringField("obj_path");
             tile.fbx_path = tile_props->GetStringField("fbx_path");
             tile.material = tile_props->GetStringField("material");
+            tile.name = FPaths::GetBaseFilename(FPaths::GetCleanFilename(tile.fbx_path));
 
             this->terrain_data.Add(tile_name, tile);
         }

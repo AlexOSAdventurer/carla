@@ -22,7 +22,7 @@ public:
   void CreateTiles();
 
   UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
-  void CreateTile(const FString tile_index);
+  void CreateTile(const FCustomMapTileData tile_data, const FString tile_path, const TArray<float> origin);
   
 private:
   UPROPERTY()

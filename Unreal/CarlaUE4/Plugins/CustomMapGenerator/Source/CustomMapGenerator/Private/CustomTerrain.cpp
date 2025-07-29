@@ -22,6 +22,8 @@
 #include "DesktopPlatform/Public/DesktopPlatformModule.h"
 #include "EditorLevelLibrary.h"
 #include "FileHelpers.h"
+#include "Misc/Paths.h"
+
 
 UCustomTerrain::UCustomTerrain() {
 
@@ -32,54 +34,56 @@ UCustomTerrain::~UCustomTerrain()
 }
 
 void UCustomTerrain::Init(FString map_name_passed, UMapDataset* map_dataset_passed) {
-  map_name = map_name_passed;
-  map_dataset = map_dataset_passed;
+  this->map_name = map_name_passed;
+  this->map_dataset = map_dataset_passed;
   UE_LOG(LogCustomMapGenerator, Display, TEXT("UCustomTerrain::Init is called!!!"));
 }
 
 void UCustomTerrain::CreateTiles() {
+  TMap<FString, FString> tile_to_asset = this->map_dataset->importTerrainMeshes(this->map_name);
   TArray<FString> keys = this->map_dataset->getTerrainTileKeys();
+  TArray<float> origin = this->map_dataset->getOrigin();
   for (FString& key : keys) {
-    this->CreateTile(key);
+    FCustomMapTileData tile_data = this->map_dataset->getTerrainData(key);
+    this->CreateTile(tile_data, tile_to_asset[tile_data.name], origin);
+  }
+  UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
+  UEditorLevelLibrary::SaveCurrentLevel();
+}
+
+void UCustomTerrain::CreateTile(const FCustomMapTileData tile_data, const FString tile_path, const TArray<float> origin) {
+  UE_LOG(LogCustomMapGenerator, Display, TEXT("CreateTile tile_index %s"), *(tile_data.name));
+  UStaticMesh* static_mesh = LoadObject<UStaticMesh>(nullptr, *tile_path);
+
+  if (!static_mesh)
+  {
+    UE_LOG(LogCustomMapGenerator, Error, TEXT("Failed to load mesh from %s"), *tile_path);
+    return;
+  }
+  FVector location(tile_data.min_x - origin[0], tile_data.min_y - origin[1], tile_data.min_z - origin[2]);  // World location
+  FRotator rotation(0, 0, 0); // Yaw/Pitch/Roll
+  FActorSpawnParameters spawn_params;
+
+  UWorld* world = UEditorLevelLibrary::GetEditorWorld();
+  AStaticMeshActor* mesh_actor = world->SpawnActor<AStaticMeshActor>(
+    AStaticMeshActor::StaticClass(), 
+    FTransform(rotation, location),
+    spawn_params
+  );
+  if (mesh_actor && static_mesh)
+  {
+    UStaticMeshComponent* mesh_component = mesh_actor->GetStaticMeshComponent();
+    mesh_component->SetStaticMesh(static_mesh);
+    mesh_component->SetMobility(EComponentMobility::Static);
+    mesh_component->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    mesh_actor->SetActorLabel(tile_data.name);
+    mesh_actor->SetFolderPath(FName("Terrain"));
+
+    // Make sure it shows up
+    mesh_component->RegisterComponent();
+  }
+  else {
+    UE_LOG(LogCustomMapGenerator, Error, TEXT("Failed to load mesh actor for %s"), *tile_path);
   }
 }
 
-void UCustomTerrain::CreateTile(const FString tile_index) {
-  UE_LOG(LogCustomMapGenerator, Display, TEXT("CreateTile tile_index %s"), *tile_index);
-  //CreateTerrainMeshForTile(tile_index);
-  //UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
-  //UEditorLevelLibrary::SaveCurrentLevel();
-}
-
-/*
-void UCustomTerrain::CreateTerrainMesh()
-{
-  UWorld* World = UEditorLevelLibrary::GetEditorWorld();
-  // Creation of the procedural mesh
-  AStaticMeshActor* MeshActor = World->SpawnActor<AStaticMeshActor>();
-  UStaticMeshComponent* Mesh = MeshActor->GetStaticMeshComponent();
-
-  UKismetProceduralMeshLibrary::CalculateTangentsForMesh(
-    Vertices,
-    Triangles,
-    UVs,
-    Normals,
-    Tangents
-  );
-
-  FProceduralCustomMesh MeshData;
-  MeshData.Vertices = Vertices;
-  MeshData.Triangles = Triangles;
-  MeshData.Normals = Normals;
-  MeshData.UV0 = UVs;
-  UE_LOG(LogCustomMapGenerator, Warning, TEXT("Creating Mesh"));
-  UStaticMesh* MeshToSet = UMapGenFunctionLibrary::CreateMesh(MeshData, Tangents, DefaultMaterial, MapName, "Terrain"+TileIndex, FName(TEXT("SM_LandscapeMesh" + TileIndex + FString::FromInt(MeshIndex) )));
-  Mesh->SetStaticMesh(MeshToSet);
-  MeshActor->SetActorLabel("SM_LandscapeActor" + TileIndex + FString::FromInt(MeshIndex) );
-  MeshActor->SetFolderPath(FName(*("Tile" + TileIndex + "/Terrain")));
-  MeshActor->Tags.Add(FName("LandscapeToMove"));
-  Mesh->CastShadow = false;
-  MeshActor->SetActorLocation(FVector(tile_position_cm.X, tile_position_cm.Y, dem_height_beginning * DEMConversionFactorToUnreal));
-  UE_LOG(LogCustomMapGenerator, Warning, TEXT("Adding to Landscapes list"));
-  
-}*/
