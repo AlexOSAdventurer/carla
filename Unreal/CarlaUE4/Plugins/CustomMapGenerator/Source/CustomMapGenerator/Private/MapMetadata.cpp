@@ -79,6 +79,7 @@ void UMapMetadata::loadMetadata(FString metadata_path_passed) {
         TSharedPtr<FJsonObject> assets_json = root_object->GetObjectField(asset_type);
         FCustomMapAssetList asset_list;
         asset_list.assets.Empty();
+        asset_list.asset_type = asset_type;
         for (const auto& asset_entry : assets_json->Values)
         {
             FString asset_name = asset_entry.Key;
