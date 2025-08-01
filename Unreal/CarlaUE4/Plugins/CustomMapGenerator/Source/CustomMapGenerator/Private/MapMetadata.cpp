@@ -17,7 +17,8 @@ UMapMetadata::~UMapMetadata() {
 void UMapMetadata::loadMetadata(FString metadata_path_passed) {
     this->original_bounds.Empty();
     this->carla_bounds.Empty();
-    this->terrain_data.Empty();
+    this->asset_types.Empty();
+    this->asset_data.Empty();
 
     this->metadata_path = metadata_path_passed;
     FString file_content;
@@ -61,31 +62,52 @@ void UMapMetadata::loadMetadata(FString metadata_path_passed) {
         }
     }
 
+    TArray<TSharedPtr<FJsonValue>> asset_types_json = root_object->GetArrayField("asset_types");
+    for (const TSharedPtr<FJsonValue>& value : asset_types_json)
+    {
+        if (value->Type == EJson::String)
+        {
+            this->asset_types.Add(value->AsString());
+        }
+        else
+        {
+            UE_LOG(LogCustomMapGenerator, Warning, TEXT("Non-string value found in 'asset_types' array"));
+        }
+    }
+
+    for (const FString& asset_type : this->asset_types) {
+        TSharedPtr<FJsonObject> assets_json = root_object->GetObjectField(asset_type);
+        FCustomMapAssetList asset_list;
+        asset_list.assets.Empty();
+        for (const auto& asset_entry : assets_json->Values)
+        {
+            FString asset_name = asset_entry.Key;
+            TSharedPtr<FJsonObject> asset_props = asset_entry.Value->AsObject();
+
+            if (asset_props.IsValid())
+            {
+                FCustomMapAssetData asset;
+
+                asset.min_y = asset_props->GetNumberField("min_y") * 100.0;
+                asset.min_x = asset_props->GetNumberField("min_x") * 100.0;
+                asset.max_y = asset_props->GetNumberField("max_y") * 100.0;
+                asset.max_x = asset_props->GetNumberField("max_x") * 100.0;
+                asset.min_z = asset_props->GetNumberField("min_z") * 100.0;
+                asset.max_z = asset_props->GetNumberField("max_z") * 100.0;
+                asset.obj_path = asset_props->GetStringField("obj_path");
+                asset.fbx_path = asset_props->GetStringField("fbx_path");
+                asset.material = asset_props->GetStringField("material");
+                asset.name = FPaths::GetBaseFilename(FPaths::GetCleanFilename(asset.fbx_path));
+
+                asset_list.assets.Add(asset_name, asset);
+            }
+        }
+        this->asset_data.Add(asset_type, asset_list);
+    }
+
     TSharedPtr<FJsonObject> terrain = root_object->GetObjectField("terrain");
 
 
-    for (const auto& tile_entry : terrain->Values)
-    {
-        FString tile_name = tile_entry.Key;
-        TSharedPtr<FJsonObject> tile_props = tile_entry.Value->AsObject();
 
-        if (tile_props.IsValid())
-        {
-            FCustomMapTileData tile;
 
-            tile.min_y = tile_props->GetNumberField("min_y") * 100.0;
-            tile.min_x = tile_props->GetNumberField("min_x") * 100.0;
-            tile.max_y = tile_props->GetNumberField("max_y") * 100.0;
-            tile.max_x = tile_props->GetNumberField("max_x") * 100.0;
-            tile.min_z = tile_props->GetNumberField("min_z") * 100.0;
-            tile.max_z = tile_props->GetNumberField("max_z") * 100.0;
-            tile.tile_point_interval = tile_props->GetNumberField("tile_point_interval") * 100.0;
-            tile.obj_path = tile_props->GetStringField("obj_path");
-            tile.fbx_path = tile_props->GetStringField("fbx_path");
-            tile.material = tile_props->GetStringField("material");
-            tile.name = FPaths::GetBaseFilename(FPaths::GetCleanFilename(tile.fbx_path));
-
-            this->terrain_data.Add(tile_name, tile);
-        }
-    }
 }

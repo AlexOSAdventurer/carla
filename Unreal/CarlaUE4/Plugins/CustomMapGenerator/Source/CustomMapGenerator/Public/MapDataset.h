@@ -16,19 +16,34 @@ public:
     ~UMapDataset();
 
     UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
-    FString getStaticTerrainPath(const FString& map_name);
+    FString getStaticAssetPath(const FString& map_name, const FString& asset_type);
 
     UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
-    TMap<FString, FString> importTerrainMeshes(const FString& map_name);
+    FString getUnrealMapFolderLocal(const FString& map_name);
+
+    UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
+    FString getUnrealMapFolderGlobal(const FString& map_name);
+
+    UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
+    FString getXODRFolderPath(const FString& map_name);
+
+    UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
+    TMap<FString, FString> importAssetMeshes(const FString& map_name, const FString& asset_type);
+
+    UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
+    FString getXODRMapPath(const FString& map_name);
+
+    UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
+    void copyXODR(const FString& map_name);
 
     UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
     void load();
 
     UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
-    TArray<FString> getTerrainTileKeys();
+    TArray<FString> getAssetKeys(const FString& asset_type);
 
     UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
-    FCustomMapTileData getTerrainData(FString tile_key);
+    FCustomMapAssetData getAssetData(const FString& tile_key, const FString& asset_type);
 
     UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
     TArray<float> getOrigin();

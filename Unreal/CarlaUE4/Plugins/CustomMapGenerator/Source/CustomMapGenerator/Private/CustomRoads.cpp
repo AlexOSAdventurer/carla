@@ -1,5 +1,5 @@
 // Copyright (c) 2025 Alex Richardson, Jonathan Sprinkle and Vanderbilt University
-#include "CustomTerrain.h"
+#include "CustomRoads.h"
 #include "CustomMapGenerator.h"
 #include "Misc/FileHelper.h"
 
@@ -24,43 +24,43 @@
 #include "FileHelpers.h"
 #include "Misc/Paths.h"
 
-const FString UCustomTerrain::asset_type = "terrain";
+const FString UCustomRoads::asset_type = "roads";
 
-UCustomTerrain::UCustomTerrain() {
+UCustomRoads::UCustomRoads() {
 
 }
 
-UCustomTerrain::~UCustomTerrain()
+UCustomRoads::~UCustomRoads()
 {
 }
 
-void UCustomTerrain::Init(FString map_name_passed, UMapDataset* map_dataset_passed) {
+void UCustomRoads::Init(FString map_name_passed, UMapDataset* map_dataset_passed) {
   this->map_name = map_name_passed;
   this->map_dataset = map_dataset_passed;
-  UE_LOG(LogCustomMapGenerator, Display, TEXT("UCustomTerrain::Init is called!!!"));
+  UE_LOG(LogCustomMapGenerator, Display, TEXT("UCustomRoads::Init is called!!!"));
 }
 
-void UCustomTerrain::CreateTiles() {
-  TMap<FString, FString> tile_to_asset = this->map_dataset->importAssetMeshes(this->map_name, UCustomTerrain::asset_type);
-  TArray<FString> keys = this->map_dataset->getAssetKeys(UCustomTerrain::asset_type);
+void UCustomRoads::CreateRoads() {
+  TMap<FString, FString> road_to_asset = this->map_dataset->importAssetMeshes(this->map_name, UCustomRoads::asset_type);
+  TArray<FString> keys = this->map_dataset->getAssetKeys(UCustomRoads::asset_type);
   for (FString& key : keys) {
-    FCustomMapAssetData tile_data = this->map_dataset->getAssetData(key, UCustomTerrain::asset_type);
-    this->CreateTile(tile_data, tile_to_asset[tile_data.name]);
+    FCustomMapAssetData road_data = this->map_dataset->getAssetData(key, UCustomRoads::asset_type);
+    this->CreateRoad(road_data, road_to_asset[road_data.name]);
   }
   UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
   UEditorLevelLibrary::SaveCurrentLevel();
 }
 
-void UCustomTerrain::CreateTile(const FCustomMapAssetData tile_data, const FString tile_path) {
-  UE_LOG(LogCustomMapGenerator, Display, TEXT("CreateTile tile_index %s"), *(tile_data.name));
-  UStaticMesh* static_mesh = LoadObject<UStaticMesh>(nullptr, *tile_path);
+void UCustomRoads::CreateRoad(const FCustomMapAssetData road_data, const FString road_path) {
+  UE_LOG(LogCustomMapGenerator, Display, TEXT("CreateRoad tile_index %s"), *(road_data.name));
+  UStaticMesh* static_mesh = LoadObject<UStaticMesh>(nullptr, *road_path);
 
   if (!static_mesh)
   {
-    UE_LOG(LogCustomMapGenerator, Error, TEXT("Failed to load mesh from %s"), *tile_path);
+    UE_LOG(LogCustomMapGenerator, Error, TEXT("Failed to load mesh from %s"), *road_path);
     return;
   }
-  FVector location(tile_data.min_x, tile_data.min_y, tile_data.min_z);  // World location
+  FVector location(road_data.min_x, road_data.min_y, road_data.min_z);  // World location
   FRotator rotation(0, 0, 0); // Yaw/Pitch/Roll
   FActorSpawnParameters spawn_params;
 
@@ -76,14 +76,14 @@ void UCustomTerrain::CreateTile(const FCustomMapAssetData tile_data, const FStri
     mesh_component->SetStaticMesh(static_mesh);
     mesh_component->SetMobility(EComponentMobility::Static);
     mesh_component->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-    mesh_actor->SetActorLabel(tile_data.name);
-    mesh_actor->SetFolderPath(FName(UCustomTerrain::asset_type));
+    mesh_actor->SetActorLabel(road_data.name);
+    mesh_actor->SetFolderPath(FName(UCustomRoads::asset_type));
 
     // Make sure it shows up
     mesh_component->RegisterComponent();
   }
   else {
-    UE_LOG(LogCustomMapGenerator, Error, TEXT("Failed to load mesh actor for %s"), *tile_path);
+    UE_LOG(LogCustomMapGenerator, Error, TEXT("Failed to load mesh actor for %s"), *road_path);
   }
 }
 

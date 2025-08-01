@@ -7,7 +7,7 @@
 #include "MapMetadata.generated.h"
 
 USTRUCT(BlueprintType)
-struct FCustomMapTileData
+struct FCustomMapAssetData
 {
     GENERATED_BODY()
 
@@ -30,9 +30,6 @@ struct FCustomMapTileData
     float max_z;
 
     UPROPERTY(BlueprintReadOnly, EditAnywhere)
-    float tile_point_interval;
-
-    UPROPERTY(BlueprintReadOnly, EditAnywhere)
     FString obj_path;
 
     UPROPERTY(BlueprintReadOnly, EditAnywhere)
@@ -43,6 +40,18 @@ struct FCustomMapTileData
 
     UPROPERTY(BlueprintReadOnly, EditAnywhere)
     FString name;
+};
+
+USTRUCT(BlueprintType)
+struct FCustomMapAssetList
+{
+    GENERATED_BODY()
+
+    UPROPERTY(BlueprintReadOnly, EditAnywhere)
+    TMap<FString, FCustomMapAssetData> assets;
+
+    UPROPERTY(BlueprintReadOnly, EditAnywhere)
+    FString asset_type;
 };
 
 UCLASS(Blueprintable)
@@ -57,7 +66,10 @@ public:
     void loadMetadata(FString metadata_path_passed);
 
     UPROPERTY()
-    TMap<FString, FCustomMapTileData> terrain_data;
+    TArray<FString> asset_types;
+
+    UPROPERTY()
+    TMap<FString, FCustomMapAssetList> asset_data;
 
     UPROPERTY()
     TArray<float> original_bounds;

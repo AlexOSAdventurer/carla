@@ -28,15 +28,20 @@ UGenerateBlankTile::~UGenerateBlankTile()
 
 void UGenerateBlankTile::CreateMap()
 {
-    UE_LOG(LogCustomMapGenerator, Display, TEXT("CreateMap is called, map name is %s!!!"), *(map_name));
-    this->map_dataset = NewObject<UMapDataset>();
-    this->map_dataset->load();
-    this->terrain_factory = NewObject<UCustomTerrain>();
-    this->terrain_factory->Init(this->map_name, this->map_dataset);
+  UE_LOG(LogCustomMapGenerator, Display, TEXT("CreateMap is called, map name is %s!!!"), *(map_name));
+  this->map_dataset = NewObject<UMapDataset>();
+  this->map_dataset->load();
+  this->map_dataset->copyXODR(this->map_name);
+  this->terrain_factory = NewObject<UCustomTerrain>();
+  this->terrain_factory->Init(this->map_name, this->map_dataset);
+  this->road_factory = NewObject<UCustomRoads>();
+  this->road_factory->Init(this->map_name, this->map_dataset);
 
-    ULevel* PersistantLevel = UEditorLevelLibrary::GetEditorWorld()->PersistentLevel;
-    terrain_factory->CreateTiles();
-    UE_LOG(LogCustomMapGenerator, Warning, TEXT("Mesh terrain created!"));
+  ULevel* PersistantLevel = UEditorLevelLibrary::GetEditorWorld()->PersistentLevel;
+  road_factory->CreateRoads();
+  UE_LOG(LogCustomMapGenerator, Warning, TEXT("Roads created!"));
+  terrain_factory->CreateTiles();
+  UE_LOG(LogCustomMapGenerator, Warning, TEXT("Mesh terrain created!"));
 }
 
 #endif

@@ -6,26 +6,26 @@
 #include "UnrealString.h"
 #include "Materials/MaterialInstanceConstant.h"
 #include "MapDataset.h"
-#include "CustomTerrain.generated.h"
+#include "CustomRoads.generated.h"
 
 UCLASS(Blueprintable)
-class CUSTOMMAPGENERATOR_API UCustomTerrain : public UObject
+class CUSTOMMAPGENERATOR_API UCustomRoads : public UObject
 {
   GENERATED_BODY()
 public:
-  UCustomTerrain();
-  ~UCustomTerrain();
+  UCustomRoads();
+  ~UCustomRoads();
 
   void Init(FString map_name_passed, UMapDataset* map_dataset_passed);
 
   UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
-  void CreateTiles();
+  void CreateRoads();
 
   UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
-  void CreateTile(const FCustomMapAssetData tile_data, const FString tile_path);
+  void CreateRoad(const FCustomMapAssetData road_data, const FString road_path);
 
   static const FString asset_type;
-  
+
 private:
   UPROPERTY()
   FString map_name;

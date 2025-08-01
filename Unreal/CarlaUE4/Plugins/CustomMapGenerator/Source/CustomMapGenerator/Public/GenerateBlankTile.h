@@ -18,6 +18,7 @@
 
 #include <string>
 #include "CustomTerrain.h"
+#include "CustomRoads.h"
 #include "MapDataset.h"
 #include "GenerateBlankTile.generated.h"
 
@@ -45,6 +46,9 @@ public:
 
   UPROPERTY()
   UCustomTerrain* terrain_factory;
+
+  UPROPERTY()
+  UCustomRoads* road_factory;
 
   UPROPERTY()
   UMapDataset* map_dataset;

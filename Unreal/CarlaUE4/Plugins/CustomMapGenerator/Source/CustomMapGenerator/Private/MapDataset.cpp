@@ -29,16 +29,16 @@ UMapDataset::~UMapDataset() {
 
 }
 
-FString UMapDataset::getStaticTerrainPath(const FString& map_name) {
-    return "/Game/CustomMaps/" + map_name + "/Static/Terrain/";
+FString UMapDataset::getStaticAssetPath(const FString& map_name, const FString& asset_type) {
+    return "/Game" + this->getUnrealMapFolderLocal(map_name) + "Static/" + asset_type + "/";
 }
 
 
-TMap<FString, FString> UMapDataset::importTerrainMeshes(const FString& map_name) {
+TMap<FString, FString> UMapDataset::importAssetMeshes(const FString& map_name, const FString& asset_type) {
     TMap<FString, FString> basename_to_unreal_path;
     basename_to_unreal_path.Empty();
 
-    FString mesh_path = this->getStaticTerrainPath(map_name);
+    FString mesh_path = this->getStaticAssetPath(map_name, asset_type);
 
     UFbxFactory* factory = NewObject<UFbxFactory>();
     factory->ImportUI->MeshTypeToImport = FBXIT_StaticMesh;
@@ -50,10 +50,10 @@ TMap<FString, FString> UMapDataset::importTerrainMeshes(const FString& map_name)
 
     TArray<UAssetImportTask*> tasks;
 
-    for (FString& key : this->getTerrainTileKeys()) {
-        FCustomMapTileData tile_data = this->getTerrainData(key);
-        UAssetImportTask* import_task = _generateFBXImportTask(this->dataset_path, tile_data.fbx_path, mesh_path, tile_data.name, factory);
-        basename_to_unreal_path.Add(tile_data.name, FString::Printf(TEXT("%s%s_%s.%s_%s"), *mesh_path, *(tile_data.name), *(tile_data.name), *(tile_data.name), *(tile_data.name)));
+    for (FString& key : this->getAssetKeys(asset_type)) {
+        FCustomMapAssetData asset_data = this->getAssetData(key, asset_type);
+        UAssetImportTask* import_task = _generateFBXImportTask(this->dataset_path, asset_data.fbx_path, mesh_path, asset_data.name, factory);
+        basename_to_unreal_path.Add(asset_data.name, FString::Printf(TEXT("%s%s_%s.%s_%s"), *mesh_path, *(asset_data.name), *(asset_data.name), *(asset_data.name), *(asset_data.name)));
         tasks.Add(import_task);
     }
 
@@ -61,22 +61,22 @@ TMap<FString, FString> UMapDataset::importTerrainMeshes(const FString& map_name)
     AssetToolsModule.Get().ImportAssetTasks(tasks);
 
     // Add materials
-    for (FString& key : this->getTerrainTileKeys()) {
-        FCustomMapTileData tile_data = this->getTerrainData(key);
+    for (FString& key : this->getAssetKeys(asset_type)) {
+        FCustomMapAssetData asset_data = this->getAssetData(key, asset_type);
 
         UMaterialInterface* material = Cast<UMaterialInterface>(
-            StaticLoadObject(UMaterialInterface::StaticClass(), nullptr, *(tile_data.material))
+            StaticLoadObject(UMaterialInterface::StaticClass(), nullptr, *(asset_data.material))
         );
         if (!material) {
-            UE_LOG(LogCustomMapGenerator, Display, TEXT("Material lookup failed %s"), *(tile_data.material));
+            UE_LOG(LogCustomMapGenerator, Display, TEXT("Material lookup failed %s"), *(asset_data.material));
             continue;
         }
 
-        FAssetRegistryModule& asset_registry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
-        FAssetData asset_data = asset_registry.Get().GetAssetByObjectPath(*(basename_to_unreal_path[tile_data.name]));
-        UStaticMesh* imported_mesh = Cast<UStaticMesh>(asset_data.GetAsset());
+        FAssetRegistryModule& unreal_asset_registry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+        FAssetData unreal_asset_data = unreal_asset_registry.Get().GetAssetByObjectPath(*(basename_to_unreal_path[asset_data.name]));
+        UStaticMesh* imported_mesh = Cast<UStaticMesh>(unreal_asset_data.GetAsset());
         if (!imported_mesh) {
-            UE_LOG(LogCustomMapGenerator, Display, TEXT("Mesh lookup failed %s %s"), *(basename_to_unreal_path[tile_data.name]), *(tile_data.name));
+            UE_LOG(LogCustomMapGenerator, Display, TEXT("Mesh lookup failed %s %s"), *(basename_to_unreal_path[asset_data.name]), *(asset_data.name));
             continue;
         }
         imported_mesh->SetMaterial(0, material);
@@ -87,19 +87,50 @@ TMap<FString, FString> UMapDataset::importTerrainMeshes(const FString& map_name)
     return basename_to_unreal_path;
 }
 
+FString UMapDataset::getUnrealMapFolderLocal(const FString& map_name) {
+    return "/CustomMaps/" + map_name + "/";
+}
+
+FString UMapDataset::getUnrealMapFolderGlobal(const FString& map_name) {
+    return FPaths::ProjectDir() + "/Content" + this->getUnrealMapFolderLocal(map_name);
+}
+
+FString UMapDataset::getXODRFolderPath(const FString& map_name) {
+    return this->getUnrealMapFolderGlobal(map_name) + "OpenDrive/";
+}
+
+FString UMapDataset::getXODRMapPath(const FString& map_name) {
+  return  this->getXODRFolderPath(map_name) + map_name + ".xodr";
+}
+
+void UMapDataset::copyXODR(const FString& map_name) {
+    FString original_xodr_path = this->dataset_path + "map.xodr";
+    FString destination_xodr_path = this->getXODRMapPath(map_name);
+    IPlatformFile& file_manager = FPlatformFileManager::Get().GetPlatformFile();
+
+    if(!file_manager.CopyFile(  *destination_xodr_path, *original_xodr_path,
+                              EPlatformFileRead::None,
+                              EPlatformFileWrite::None)) {
+        UE_LOG(LogCustomMapGenerator, Error, TEXT("Copying XODR from %s to %s failed!"), *(original_xodr_path), *(destination_xodr_path));
+    }
+    else {
+        UE_LOG(LogCustomMapGenerator, Display, TEXT("Copying XODR from %s to %s succeeded!"), *(original_xodr_path), *(destination_xodr_path));
+    }
+}
+
 void UMapDataset::load() {
     this->map_metadata = NewObject<UMapMetadata>(this, UMapMetadata::StaticClass());
     this->map_metadata->loadMetadata(dataset_path + "metadata.json");
 }
 
-TArray<FString> UMapDataset::getTerrainTileKeys() {
+TArray<FString> UMapDataset::getAssetKeys(const FString& asset_type) {
     TArray<FString> keys;
-    this->map_metadata->terrain_data.GetKeys(keys);
+    this->map_metadata->asset_data[asset_type].assets.GetKeys(keys);
     return keys;
 }
 
-FCustomMapTileData UMapDataset::getTerrainData(FString tile_key) {
-    return this->map_metadata->terrain_data[tile_key];
+FCustomMapAssetData UMapDataset::getAssetData(const FString& tile_key, const FString& asset_type) {
+    return this->map_metadata->asset_data[asset_type].assets[tile_key];
 }
 
 TArray<float> UMapDataset::getOrigin() {
