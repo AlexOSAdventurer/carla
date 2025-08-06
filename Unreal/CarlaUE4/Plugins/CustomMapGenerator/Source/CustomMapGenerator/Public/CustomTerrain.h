@@ -22,7 +22,7 @@ public:
   void CreateTiles();
 
   UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
-  void CreateTile(const FCustomMapAssetData tile_data, const FString tile_path);
+  void CreateTile(const FCustomMapAssetData tile_data);
 
   static const FString asset_type;
   

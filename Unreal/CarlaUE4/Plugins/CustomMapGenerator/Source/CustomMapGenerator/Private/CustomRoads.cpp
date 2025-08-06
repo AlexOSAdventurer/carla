@@ -24,7 +24,7 @@
 #include "FileHelpers.h"
 #include "Misc/Paths.h"
 
-const FString UCustomRoads::asset_type = "roads";
+const FString UCustomRoads::asset_type = "merged_roads";
 
 UCustomRoads::UCustomRoads() {
 
@@ -41,18 +41,28 @@ void UCustomRoads::Init(FString map_name_passed, UMapDataset* map_dataset_passed
 }
 
 void UCustomRoads::CreateRoads() {
-  TMap<FString, FString> road_to_asset = this->map_dataset->importAssetMeshes(this->map_name, UCustomRoads::asset_type);
   TArray<FString> keys = this->map_dataset->getAssetKeys(UCustomRoads::asset_type);
+  int i = 0;
   for (FString& key : keys) {
     FCustomMapAssetData road_data = this->map_dataset->getAssetData(key, UCustomRoads::asset_type);
-    this->CreateRoad(road_data, road_to_asset[road_data.name]);
+    this->CreateRoad(road_data);
+    // Quick and dirty trick to force package saving while looping
+    i++;
+    if ((i % 500) == 0) {
+      FlushRenderingCommands();
+      //GEditor->Tick(0.016f, false);
+      CollectGarbage(GARBAGE_COLLECTION_KEEPFLAGS);
+      UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
+      UEditorLevelLibrary::SaveCurrentLevel();
+    }
   }
   UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
   UEditorLevelLibrary::SaveCurrentLevel();
 }
 
-void UCustomRoads::CreateRoad(const FCustomMapAssetData road_data, const FString road_path) {
-  UE_LOG(LogCustomMapGenerator, Display, TEXT("CreateRoad tile_index %s"), *(road_data.name));
+void UCustomRoads::CreateRoad(const FCustomMapAssetData road_data) {
+  FString road_path = road_data.unreal_path;
+  UE_LOG(LogCustomMapGenerator, Display, TEXT("CreateRoad road_name %s"), *(road_data.name));
   UStaticMesh* static_mesh = LoadObject<UStaticMesh>(nullptr, *road_path);
 
   if (!static_mesh)
@@ -76,6 +86,8 @@ void UCustomRoads::CreateRoad(const FCustomMapAssetData road_data, const FString
     mesh_component->SetStaticMesh(static_mesh);
     mesh_component->SetMobility(EComponentMobility::Static);
     mesh_component->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    mesh_component->bCastDistanceFieldIndirectShadow = false;
+    mesh_component->SetStaticLightingMapping(false, 0);
     mesh_actor->SetActorLabel(road_data.name);
     mesh_actor->SetFolderPath(FName(UCustomRoads::asset_type));
 

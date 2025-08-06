@@ -97,6 +97,7 @@ void UMapMetadata::loadMetadata(FString metadata_path_passed) {
                 asset.max_z = asset_props->GetNumberField("max_z") * 100.0;
                 asset.obj_path = asset_props->GetStringField("obj_path");
                 asset.fbx_path = asset_props->GetStringField("fbx_path");
+                asset.unreal_path = asset_props->GetStringField("unreal_path");
                 asset.material = asset_props->GetStringField("material");
                 asset.name = FPaths::GetBaseFilename(FPaths::GetCleanFilename(asset.fbx_path));
 

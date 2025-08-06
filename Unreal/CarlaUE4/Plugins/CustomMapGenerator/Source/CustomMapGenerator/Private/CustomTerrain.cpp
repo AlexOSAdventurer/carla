@@ -41,17 +41,17 @@ void UCustomTerrain::Init(FString map_name_passed, UMapDataset* map_dataset_pass
 }
 
 void UCustomTerrain::CreateTiles() {
-  TMap<FString, FString> tile_to_asset = this->map_dataset->importAssetMeshes(this->map_name, UCustomTerrain::asset_type);
   TArray<FString> keys = this->map_dataset->getAssetKeys(UCustomTerrain::asset_type);
   for (FString& key : keys) {
     FCustomMapAssetData tile_data = this->map_dataset->getAssetData(key, UCustomTerrain::asset_type);
-    this->CreateTile(tile_data, tile_to_asset[tile_data.name]);
+    this->CreateTile(tile_data);
   }
   UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
   UEditorLevelLibrary::SaveCurrentLevel();
 }
 
-void UCustomTerrain::CreateTile(const FCustomMapAssetData tile_data, const FString tile_path) {
+void UCustomTerrain::CreateTile(const FCustomMapAssetData tile_data) {
+  FString tile_path = tile_data.unreal_path;
   UE_LOG(LogCustomMapGenerator, Display, TEXT("CreateTile tile_index %s"), *(tile_data.name));
   UStaticMesh* static_mesh = LoadObject<UStaticMesh>(nullptr, *tile_path);
 

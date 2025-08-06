@@ -36,6 +36,9 @@ struct FCustomMapAssetData
     FString fbx_path;
 
     UPROPERTY(BlueprintReadOnly, EditAnywhere)
+    FString unreal_path;
+
+    UPROPERTY(BlueprintReadOnly, EditAnywhere)
     FString material;
 
     UPROPERTY(BlueprintReadOnly, EditAnywhere)

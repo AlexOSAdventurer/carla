@@ -28,9 +28,6 @@ public:
     FString getXODRFolderPath(const FString& map_name);
 
     UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
-    TMap<FString, FString> importAssetMeshes(const FString& map_name, const FString& asset_type);
-
-    UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
     FString getXODRMapPath(const FString& map_name);
 
     UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )

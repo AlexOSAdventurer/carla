@@ -22,7 +22,7 @@ public:
   void CreateRoads();
 
   UFUNCTION( BlueprintCallable, Category="CustomMapGenerator" )
-  void CreateRoad(const FCustomMapAssetData road_data, const FString road_path);
+  void CreateRoad(const FCustomMapAssetData road_data);
 
   static const FString asset_type;
 
