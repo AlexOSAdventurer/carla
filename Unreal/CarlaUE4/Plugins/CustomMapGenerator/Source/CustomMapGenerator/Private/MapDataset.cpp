@@ -9,7 +9,7 @@
 #include "CustomMapGenerator.h"
 
 UMapDataset::UMapDataset() {
-    this->dataset_path = "/home/richarwa/CarlaIngestion/CarlaCooked/";
+    this->dataset_path = "/home/richarwa/SecondSSD/OpenTwinMap/CarlaCooked/";
 }
 
 UMapDataset::~UMapDataset() {

@@ -18,7 +18,7 @@
 
 UGenerateBlankTile::UGenerateBlankTile()
 {
-  dataset_path = "/home/richarwa/CarlaIngestion/CarlaCooked";
+  dataset_path = "/home/richarwa/SecondSSD/CarlaIngestion/CarlaCooked";
 }
 
 UGenerateBlankTile::~UGenerateBlankTile()
