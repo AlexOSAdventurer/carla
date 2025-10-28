@@ -1,4 +1,4 @@
-ARG UBUNTU_DISTRO="20.04"
+ARG UBUNTU_DISTRO="22.04"
 
 FROM carla-base:ue4-${UBUNTU_DISTRO} AS development
 
@@ -77,6 +77,26 @@ USER ${USERNAME}
 ENV HOME="/home/${USERNAME}"
 WORKDIR /workspaces
 
+# Add lastools dependencies
+USER root
+RUN apt update
+RUN apt install libjpeg62 libpng-dev libtiff-dev libjpeg-dev libz-dev libproj-dev liblzma-dev libjbig-dev libzstd-dev libgeotiff-dev libwebp-dev liblzma-dev libsqlite3-dev -y
+
+# Add GDAL dependencies
+RUN apt install software-properties-common -y
+RUN apt-add-repository ppa:ubuntugis/ubuntugis-unstable
+RUN apt-get update
+RUN apt install gdal-bin libgdal-dev -y
+
+# Install python3.8 dependencies for OpenTwinMap
+USER ${USERNAME}
+RUN python3.8 -m pip install osmium==4.0.2 pyproj==3.5.0 numpy==1.24.4 scipy==1.10.1 joblib==1.4.2 shapely==2.0.7 tqdm==4.67.1 pandas==2.0.3 open3d==0.19.0 laspy==2.5.4 networkx==3.1 rtree==1.3.0 gdal==3.6.2 --user
+# Final environment variable setup
+ENV UE4_ROOT="/workspaces/unreal-engine"
+ENV CARLA_UE4_ROOT="/workspaces/carla"
+ENV PATH="/workspaces/blender/:/workspaces/LAStools/bin/:$PATH"
+ENV LD_LIBRARY_PATH="/workspaces/LAStools/bin/lib:"
+
 FROM development AS monolith
 
 USER ${USERNAME}
@@ -92,8 +112,8 @@ RUN --mount=type=secret,id=epic_user,uid=${UID} \
 
 # Built carla
 ENV CARLA_UE4_ROOT="/workspaces/carla"
-ARG BRANCH=ue4-dev
-RUN git clone --depth 1 --branch ${BRANCH} https://github.com/carla-simulator/carla.git ${CARLA_UE4_ROOT}
+ARG BRANCH=0.9.16_OpenTwinMap
+RUN git clone --depth 1 --branch ${BRANCH} https://github.com/AlexOSAdventurer/carla ${CARLA_UE4_ROOT}
 
 WORKDIR ${CARLA_UE4_ROOT}
 

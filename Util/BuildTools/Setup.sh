@@ -699,7 +699,7 @@ cp -p -r ${SQLITE_FULL_LIB} ${LIBCARLA_INSTALL_SERVER_FOLDER}
 # -- Get and compile PROJ ------------------------------------------------------
 # ==============================================================================
 
-PROJ_VERSION=proj-7.2.1
+PROJ_VERSION=proj-9.3.0
 PROJ_REPO=https://download.osgeo.org/proj/${PROJ_VERSION}.tar.gz
 
 PROJ_TAR=${PROJ_VERSION}.tar.gz

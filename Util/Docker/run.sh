@@ -33,7 +33,7 @@ Other commands:
 END
 )
 
-UBUNTU_DISTRO=20.04
+UBUNTU_DISTRO=22.04
 
 RUN_DEV=false
 RUN_CI=false
@@ -124,6 +124,9 @@ if ${RUN_DEV}; then
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v ${UE4_ROOT}:/workspaces/unreal-engine \
     -v ${SCRIPT_DIR}/../..:/workspaces/carla \
+    -v ${SCRIPT_DIR}/../../../blender/blender-4.5.3-linux-x64:/workspaces/blender \
+    -v ${SCRIPT_DIR}/../../../LAStools/:/workspaces/LAStools \
+    -v ${SCRIPT_DIR}/../../../OpenTwinMap/:/workspaces/OpenTwinMap \
     carla-development:ue4-${UBUNTU_DISTRO} bash
 
 elif ${RUN_CI} ; then
@@ -143,6 +146,7 @@ elif ${RUN_CI} ; then
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v ${UE4_ROOT}:/workspaces/unreal-engine \
     -v ${SCRIPT_DIR}/../..:/workspaces/carla \
+    -v ${SCRIPT_DIR}/../../../blender/blender-4.5.3-linux-x64:/workspaces/blender
     carla-builder:ue4-${UBUNTU_DISTRO} bash
 
 else

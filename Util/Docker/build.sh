@@ -40,7 +40,7 @@ Other commands:
 END
 )
 
-UBUNTU_DISTRO=20.04
+UBUNTU_DISTRO=22.04
 
 BUILD_BASE=false
 BUILD_DEV=false
@@ -48,7 +48,7 @@ BUILD_MONOLITH=false
 BUILD_CI=false
 
 # CARLA target branch for monolith build
-BRANCH="ue4-dev"
+BRANCH="0.9.16_OpenTwinMap"
 EPIC_USER=
 EPIC_TOKEN=
 
