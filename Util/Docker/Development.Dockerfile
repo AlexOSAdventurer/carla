@@ -90,7 +90,7 @@ RUN apt install gdal-bin libgdal-dev -y
 
 # Install python3.8 dependencies for OpenTwinMap
 USER ${USERNAME}
-RUN python3.8 -m pip install osmium==4.0.2 pyproj==3.5.0 numpy==1.24.4 scipy==1.10.1 joblib==1.4.2 shapely==2.0.7 tqdm==4.67.1 pandas==2.0.3 open3d==0.19.0 laspy==2.5.4 networkx==3.1 rtree==1.3.0 gdal==3.6.2 --user
+RUN python3.8 -m pip install trimesh==4.9.0 osmium==4.0.2 pyproj==3.5.0 numpy==1.24.4 scipy==1.10.1 joblib==1.4.2 shapely==2.0.7 tqdm==4.67.1 pandas==2.0.3 open3d==0.19.0 laspy==2.5.4 networkx==3.1 rtree==1.3.0 gdal==3.6.2 --user
 # Final environment variable setup
 ENV UE4_ROOT="/workspaces/unreal-engine"
 ENV CARLA_UE4_ROOT="/workspaces/carla"
