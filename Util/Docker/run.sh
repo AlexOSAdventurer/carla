@@ -127,6 +127,7 @@ if ${RUN_DEV}; then
     -v ${SCRIPT_DIR}/../../../blender/blender-4.5.3-linux-x64:/workspaces/blender \
     -v ${SCRIPT_DIR}/../../../LAStools/:/workspaces/LAStools \
     -v ${SCRIPT_DIR}/../../../OpenTwinMap/:/workspaces/OpenTwinMap \
+    -v /home/richarwa/Documents/openstreetmap/TDOT_Davidson:/workspaces/TDOT_Davidson \
     carla-development:ue4-${UBUNTU_DISTRO} bash
 
 elif ${RUN_CI} ; then

@@ -114,7 +114,7 @@ namespace geom {
 
   GeoLocation GeoLocation::Transform(const Location &location) const {
     return InverseTransversemercProjection(
-        location.x, location.y, location.z + altitude);
+        location.x, -location.y, location.z + altitude);
   }
 
 

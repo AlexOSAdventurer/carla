@@ -82,11 +82,15 @@ USER root
 RUN apt update
 RUN apt install libjpeg62 libpng-dev libtiff-dev libjpeg-dev libz-dev libproj-dev liblzma-dev libjbig-dev libzstd-dev libgeotiff-dev libwebp-dev liblzma-dev libsqlite3-dev -y
 
-# Add GDAL dependencies
+# Add GDAL and PDAL dependencies
 RUN apt install software-properties-common -y
 RUN apt-add-repository ppa:ubuntugis/ubuntugis-unstable
 RUN apt-get update
-RUN apt install gdal-bin libgdal-dev -y
+RUN apt install gdal-bin libgdal-dev pdal libpdal-dev proj-data libproj-dev proj-bin -y
+
+# Install OSMIUM tool
+RUN apt-get update
+RUN apt install osmium-tool -y
 
 # Install python3.8 dependencies for OpenTwinMap
 USER ${USERNAME}
