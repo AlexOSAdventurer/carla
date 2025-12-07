@@ -124,10 +124,7 @@ if ${RUN_DEV}; then
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v ${UE4_ROOT}:/workspaces/unreal-engine \
     -v ${SCRIPT_DIR}/../..:/workspaces/carla \
-    -v ${SCRIPT_DIR}/../../../blender/blender-4.5.3-linux-x64:/workspaces/blender \
-    -v ${SCRIPT_DIR}/../../../LAStools/:/workspaces/LAStools \
-    -v ${SCRIPT_DIR}/../../../OpenTwinMap/:/workspaces/OpenTwinMap \
-    -v /home/richarwa/Documents/openstreetmap/TDOT_Davidson:/workspaces/TDOT_Davidson \
+    -v ${SCRIPT_DIR}/../../../i24motion_to_carla:/workspaces/i24motion_to_carla \
     carla-development:ue4-${UBUNTU_DISTRO} bash
 
 elif ${RUN_CI} ; then

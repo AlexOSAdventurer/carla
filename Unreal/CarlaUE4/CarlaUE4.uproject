@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "4.26",
+	"EngineAssociation": "{0004EB86-08DE-17FC-3550-3BC643248FF1}",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -127,6 +127,10 @@
 		},
 		{
 			"Name": "CustomMapGenerator",
+			"Enabled": true
+		},
+		{
+			"Name": "StreetMap",
 			"Enabled": true
 		}
 	]

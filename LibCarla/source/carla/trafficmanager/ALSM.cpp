@@ -91,13 +91,14 @@ void ALSM::Update() {
   UpdateRegisteredActorsData(hybrid_physics_mode, max_idle_time);
 
   // Destroy registered vehicle if stuck at a location for too long.
+  /*
   if (IsVehicleStuck(max_idle_time.first)
       && (current_timestamp.elapsed_seconds - elapsed_last_actor_destruction) > DELTA_TIME_BETWEEN_DESTRUCTIONS
       && hero_actors.find(max_idle_time.first) == hero_actors.end()) {
     registered_vehicles.Destroy(max_idle_time.first);
     RemoveActor(max_idle_time.first, true);
     elapsed_last_actor_destruction = current_timestamp.elapsed_seconds;
-  }
+  }*/
 
   // Destorying vehicles for marked for removal by stages.
   if (parameters.GetOSMMode()) {
