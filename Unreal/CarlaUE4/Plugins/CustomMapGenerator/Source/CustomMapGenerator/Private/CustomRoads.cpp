@@ -24,7 +24,7 @@
 #include "FileHelpers.h"
 #include "Misc/Paths.h"
 
-const FString UCustomRoads::asset_type = "merged_roads";
+const FString UCustomRoads::asset_type = "roads";
 
 UCustomRoads::UCustomRoads() {
 
