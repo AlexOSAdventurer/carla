@@ -31,8 +31,13 @@ while true; do
   esac
 done
 
+# Kludge because of issue with the import paths not showing Unreal? Hack, must clarify
+cd Unreal
+
 #Tar.gz the stuff
-for filepath in `find Import/ -type f -name "*.tar.gz"`; do
+for filepath in `find ../Import/ -type f -name "*.tar.gz"`; do
   tar --keep-newer-files -xvf ${filepath}
 done
+
+cd ..
 
