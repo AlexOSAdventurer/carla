@@ -138,6 +138,16 @@ void AOpenDriveActor::BuildRoutes()
   BuildRoutes(GetWorld()->GetMapName());
 }
 
+static void printPredecessorMap(std::unordered_map<carla::road::element::Waypoint, std::vector<carla::road::element::Waypoint>> predecessor_map) {
+  UE_LOG(LogCarla, Log, TEXT("Predecessor Map "));
+  for (auto &Wp : predecessor_map) {
+    UE_LOG(LogCarla, Log, TEXT(".  Waypoint ID: %u, SectionID: %u, LaneID: %i"), Wp.first.road_id, Wp.first.section_id, Wp.first.lane_id);
+    for (auto& Wp2 : Wp.second) {
+      UE_LOG(LogCarla, Log, TEXT(".   .  Predecessor Waypoint ID: %u, SectionID: %u, LaneID: %i"), Wp2.road_id, Wp2.section_id, Wp2.lane_id);
+    }
+  }
+}
+
 void AOpenDriveActor::BuildRoutes(FString MapName)
 {
   using Waypoint = carla::road::element::Waypoint;
@@ -151,7 +161,9 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
     XodrContent = UOpenDrive::LoadXODRFullPath(CustomPath);
   }
 
+  UE_LOG(LogCarla, Log, TEXT("Loading opendrive into map!"));
   auto map = carla::opendrive::OpenDriveParser::Load(carla::rpc::FromLongFString(XodrContent));
+  //UE_LOG(LogCarla, Log, TEXT("Loaded opendrive into map, %s"), *XodrContent);
 
   if (!map.has_value())
   {
@@ -159,32 +171,41 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
     return;
   }
 
+  UE_LOG(LogCarla, Log, TEXT("Fetch waypoints!"));
   // List with waypoints, each one at the end of each lane of the map
   const std::vector<Waypoint> LaneWaypoints =
       map->GenerateWaypointsOnRoadEntries();
+  UE_LOG(LogCarla, Log, TEXT("Waypoints fetched!"));
 
   std::unordered_map<Waypoint, std::vector<Waypoint>> PredecessorMap;
 
   for (auto &Wp : LaneWaypoints)
   {
+    UE_LOG(LogCarla, Log, TEXT("Waypoint ID: %u, SectionID: %u, LaneID: %i"), Wp.road_id, Wp.section_id, Wp.lane_id);
     const auto PredecessorsList = map->GetPredecessors(Wp);
     if (PredecessorsList.empty())
     {
+      UE_LOG(LogCarla, Log, TEXT("Predecessors empty!"));
       continue;
     }
+    
     const auto MinRoadId = *std::min_element(
         PredecessorsList.begin(),
         PredecessorsList.end(),
         [](const auto &WaypointA, const auto &WaypointB) {
           return WaypointA.road_id < WaypointB.road_id;
         });
+    UE_LOG(LogCarla, Log, TEXT("Min waypoint: ID: %u, Section ID: %u, Lane id: %i!"), MinRoadId.road_id, MinRoadId.section_id, MinRoadId.lane_id);
     PredecessorMap[MinRoadId].emplace_back(Wp);
   }
+
+  UE_LOG(LogCarla, Log, TEXT("Number of waypoints %d"), LaneWaypoints.size());
+  printPredecessorMap(PredecessorMap);
 
   for (auto &&PredecessorWp : PredecessorMap)
   {
     ARoutePlanner *RoutePlanner = nullptr;
-
+    UE_LOG(LogCarla, Log, TEXT("Number of predecessors %d"), PredecessorWp.second.size());
     for (auto &&Wp : PredecessorWp.second)
     {
       std::vector<Waypoint> Waypoints;
@@ -244,6 +265,7 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
       }
     }
   }
+  UE_LOG(LogCarla, Log, TEXT("Routes generated!"));
 }
 
 void AOpenDriveActor::RemoveRoutes()
