@@ -34,7 +34,7 @@ done
 cd Unreal/CarlaUE4/Content
 
 #Tar.gz the stuff
-for filepath in `find ../Import/ -type f -name "*.tar.gz"`; do
+for filepath in `find ../../../Import/ -type f -name "*.tar.gz"`; do
   tar --keep-newer-files -xvf ${filepath}
 done
 

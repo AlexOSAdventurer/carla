@@ -1,2 +1,2 @@
 #!/bin/bash
-./Util/ImportAssets.sh
+./Util/ImportAssetsI24.sh
